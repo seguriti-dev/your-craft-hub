@@ -14,6 +14,8 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import project1 from "@/assets/project-1.jpg";
 import project2 from "@/assets/project-2.jpg";
 import project3 from "@/assets/project-3.jpg";
@@ -40,7 +42,21 @@ const projects = [
 ];
 
 const Portfolio = () => {
-  const [selectedProject, setSelectedProject] = useState<typeof projects[0] | null>(null);
+  const [selectedIndex, setSelectedIndex] = useState<number | null>(null);
+
+  const handlePrevious = () => {
+    if (selectedIndex !== null) {
+      setSelectedIndex((selectedIndex - 1 + projects.length) % projects.length);
+    }
+  };
+
+  const handleNext = () => {
+    if (selectedIndex !== null) {
+      setSelectedIndex((selectedIndex + 1) % projects.length);
+    }
+  };
+
+  const selectedProject = selectedIndex !== null ? projects[selectedIndex] : null;
 
   return (
     <section id="portafolio" className="py-20 bg-background">
@@ -65,7 +81,7 @@ const Portfolio = () => {
             <CarouselContent>
               {projects.map((project, index) => (
                 <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/2">
-                  <Card className="overflow-hidden group cursor-pointer" onClick={() => setSelectedProject(project)}>
+                  <Card className="overflow-hidden group cursor-pointer" onClick={() => setSelectedIndex(index)}>
                     <CardContent className="p-0">
                       <div className="relative overflow-hidden aspect-[4/3]">
                         <img
@@ -94,19 +110,40 @@ const Portfolio = () => {
           </Carousel>
         </div>
 
-        <Dialog open={!!selectedProject} onOpenChange={(open) => !open && setSelectedProject(null)}>
+        <Dialog open={!!selectedProject} onOpenChange={(open) => !open && setSelectedIndex(null)}>
           <DialogContent className="max-w-4xl">
             <DialogHeader>
               <DialogTitle>{selectedProject?.title}</DialogTitle>
               <DialogDescription>{selectedProject?.category}</DialogDescription>
             </DialogHeader>
             <div className="space-y-4">
-              <img
-                src={selectedProject?.image}
-                alt={selectedProject?.title}
-                className="w-full h-auto rounded-lg"
-              />
+              <div className="relative">
+                <img
+                  src={selectedProject?.image}
+                  alt={selectedProject?.title}
+                  className="w-full h-auto rounded-lg"
+                />
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm"
+                  onClick={handlePrevious}
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </Button>
+                <Button
+                  variant="outline"
+                  size="icon"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 bg-background/80 backdrop-blur-sm"
+                  onClick={handleNext}
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </Button>
+              </div>
               <p className="text-muted-foreground">{selectedProject?.description}</p>
+              <div className="text-center text-sm text-muted-foreground">
+                {selectedIndex !== null && `${selectedIndex + 1} / ${projects.length}`}
+              </div>
             </div>
           </DialogContent>
         </Dialog>
