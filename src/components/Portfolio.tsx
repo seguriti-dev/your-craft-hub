@@ -1,3 +1,4 @@
+import { useState } from "react";
 import {
   Carousel,
   CarouselContent,
@@ -6,6 +7,13 @@ import {
   CarouselPrevious,
 } from "@/components/ui/carousel";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
 import project1 from "@/assets/project-1.jpg";
 import project2 from "@/assets/project-2.jpg";
 import project3 from "@/assets/project-3.jpg";
@@ -32,6 +40,8 @@ const projects = [
 ];
 
 const Portfolio = () => {
+  const [selectedProject, setSelectedProject] = useState<typeof projects[0] | null>(null);
+
   return (
     <section id="portafolio" className="py-20 bg-background">
       <div className="container mx-auto px-4">
@@ -55,7 +65,7 @@ const Portfolio = () => {
             <CarouselContent>
               {projects.map((project, index) => (
                 <CarouselItem key={index} className="md:basis-1/2 lg:basis-1/2">
-                  <Card className="overflow-hidden group">
+                  <Card className="overflow-hidden group cursor-pointer" onClick={() => setSelectedProject(project)}>
                     <CardContent className="p-0">
                       <div className="relative overflow-hidden aspect-[4/3]">
                         <img
@@ -83,6 +93,23 @@ const Portfolio = () => {
             <CarouselNext className="right-4" />
           </Carousel>
         </div>
+
+        <Dialog open={!!selectedProject} onOpenChange={(open) => !open && setSelectedProject(null)}>
+          <DialogContent className="max-w-4xl">
+            <DialogHeader>
+              <DialogTitle>{selectedProject?.title}</DialogTitle>
+              <DialogDescription>{selectedProject?.category}</DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4">
+              <img
+                src={selectedProject?.image}
+                alt={selectedProject?.title}
+                className="w-full h-auto rounded-lg"
+              />
+              <p className="text-muted-foreground">{selectedProject?.description}</p>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </section>
   );

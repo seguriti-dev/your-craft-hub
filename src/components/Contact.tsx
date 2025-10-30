@@ -1,5 +1,20 @@
 import { Phone, Mail, MapPin, Clock } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Form,
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { useToast } from "@/hooks/use-toast";
 
 const contactInfo = [
   {
@@ -24,7 +39,52 @@ const contactInfo = [
   },
 ];
 
+const formSchema = z.object({
+  name: z
+    .string()
+    .trim()
+    .min(1, { message: "El nombre es requerido" })
+    .max(100, { message: "El nombre debe tener menos de 100 caracteres" }),
+  phone: z
+    .string()
+    .trim()
+    .min(10, { message: "El número debe tener al menos 10 dígitos" })
+    .max(15, { message: "El número debe tener menos de 15 dígitos" })
+    .regex(/^[0-9+\s()-]+$/, { message: "Formato de teléfono inválido" }),
+  message: z
+    .string()
+    .trim()
+    .min(1, { message: "El mensaje es requerido" })
+    .max(500, { message: "El mensaje debe tener menos de 500 caracteres" }),
+});
+
 const Contact = () => {
+  const { toast } = useToast();
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      name: "",
+      phone: "",
+      message: "",
+    },
+  });
+
+  const onSubmit = (values: z.infer<typeof formSchema>) => {
+    // Encode values for SMS/WhatsApp
+    const encodedMessage = encodeURIComponent(
+      `Nombre: ${values.name}\nTeléfono: ${values.phone}\nMensaje: ${values.message}`
+    );
+    
+    // Open WhatsApp with the message
+    window.open(`https://wa.me/5215551234567?text=${encodedMessage}`, "_blank");
+    
+    toast({
+      title: "Mensaje enviado",
+      description: "Te contactaremos pronto.",
+    });
+    
+    form.reset();
+  };
   return (
     <section id="contacto" className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
@@ -61,18 +121,62 @@ const Contact = () => {
           })}
         </div>
 
-        <div className="mt-12 text-center">
-          <p className="text-lg text-muted-foreground mb-4">
-            ¿Listo para comenzar tu proyecto?
-          </p>
-          <a
-            href="https://wa.me/5215551234567"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center px-8 py-3 bg-primary text-primary-foreground rounded-lg font-semibold hover:bg-primary/90 transition-colors"
-          >
-            Solicitar Cotización Gratuita
-          </a>
+        <div className="mt-16 max-w-2xl mx-auto">
+          <Card>
+            <CardContent className="p-6">
+              <h3 className="text-2xl font-bold mb-6 text-center">Envíanos un Mensaje</h3>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="name"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Nombre</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Tu nombre completo" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="phone"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Teléfono</FormLabel>
+                        <FormControl>
+                          <Input placeholder="+52 555 123 4567" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="message"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Mensaje</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Describe tu proyecto..."
+                            className="min-h-[120px]"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <Button type="submit" className="w-full" size="lg">
+                    Enviar Mensaje
+                  </Button>
+                </form>
+              </Form>
+            </CardContent>
+          </Card>
         </div>
       </div>
     </section>
