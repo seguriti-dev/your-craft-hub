@@ -32,7 +32,7 @@ const Navbar = () => {
         <div className="flex items-center justify-between h-16 md:h-20">
           <div className="flex items-center">
             <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              ProContratistas
+              MiEmpresa
             </span>
           </div>
 

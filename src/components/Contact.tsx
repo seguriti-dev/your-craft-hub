@@ -25,7 +25,7 @@ const contactInfo = [
   {
     icon: Mail,
     title: "Email",
-    details: ["info@procontratistas.com", "contacto@procontratistas.com"],
+    details: ["info@miempresa.com", "contacto@miempresa.com"],
   },
   {
     icon: MapPin,

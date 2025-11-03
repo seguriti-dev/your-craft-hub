@@ -7,7 +7,7 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center">
           <div className="mb-4 md:mb-0">
             <span className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              ProContratistas
+              MiEmpresa
             </span>
             <p className="text-secondary-foreground/80 mt-2">
               Construyendo tus sueños con calidad y profesionalismo
@@ -15,7 +15,7 @@ const Footer = () => {
           </div>
           <div className="text-center md:text-right">
             <p className="text-secondary-foreground/80">
-              © {currentYear} ProContratistas. Todos los derechos reservados.
+              © {currentYear} MiEmpresa. Todos los derechos reservados.
             </p>
           </div>
         </div>
