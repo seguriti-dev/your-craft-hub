@@ -121,7 +121,7 @@ const Contact = () => {
           })}
         </div>
 
-        <div className="mt-16 max-w-2xl mx-auto">
+        <div id="contact-form" className="mt-16 max-w-2xl mx-auto">
           <Card>
             <CardContent className="p-6">
               <h3 className="text-2xl font-bold mb-6 text-center">Envíanos un Mensaje</h3>
