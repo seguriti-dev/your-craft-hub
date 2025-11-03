@@ -78,7 +78,7 @@ const Navbar = () => {
 
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
-          <div className="md:hidden py-4 space-y-4 bg-background/95 backdrop-blur-sm">
+          <div className="md:hidden py-4 space-y-4">
             <button
               onClick={() => scrollToSection("inicio")}
               className={`block w-full text-left px-4 py-2 ${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
