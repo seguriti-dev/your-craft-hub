@@ -6,19 +6,21 @@ const Footer = () => {
   return (
     <footer className="bg-secondary text-secondary-foreground py-12">
       <div className="container mx-auto px-4">
-        <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
           <div className="text-center md:text-left">
-            <img 
-              src={logoWhite} 
-              alt="Hands-Hands Cleaning & Restoration Services" 
-              className="h-24 w-auto mb-4 mx-auto md:mx-0"
-            />
-            <p className="text-muted-foreground max-w-md">
+            <p className="text-white">
               Servicios profesionales de limpieza y restauración con calidad y compromiso
             </p>
           </div>
+          <div className="flex justify-center">
+            <img 
+              src={logoWhite} 
+              alt="Hands-Hands Cleaning & Restoration Services" 
+              className="h-24 w-auto"
+            />
+          </div>
           <div className="text-center md:text-right">
-            <p className="text-muted-foreground">
+            <p className="text-white">
               © {currentYear} Hands-Hands. Todos los derechos reservados.
             </p>
           </div>
