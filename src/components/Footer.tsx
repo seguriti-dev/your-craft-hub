@@ -1,4 +1,4 @@
-import logoColor from "@/assets/logo-color.svg";
+import logoWhite from "@/assets/logo-white.svg";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -9,9 +9,9 @@ const Footer = () => {
         <div className="flex flex-col md:flex-row justify-between items-center gap-8">
           <div className="text-center md:text-left">
             <img 
-              src={logoColor} 
+              src={logoWhite} 
               alt="Hands-Hands Cleaning & Restoration Services" 
-              className="h-16 w-auto mb-4 mx-auto md:mx-0"
+              className="h-24 w-auto mb-4 mx-auto md:mx-0"
             />
             <p className="text-muted-foreground max-w-md">
               Servicios profesionales de limpieza y restauración con calidad y compromiso
