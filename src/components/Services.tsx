@@ -1,36 +1,36 @@
-import { Building2, Hammer, Home, PaintBucket, Wrench, Ruler } from "lucide-react";
+import { Sparkles, Home, Droplets, Wind, Shield, Wrench } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const services = [
   {
-    icon: Building2,
-    title: "Construcción Nueva",
-    description: "Proyectos de construcción residencial y comercial desde cero con los más altos estándares de calidad.",
+    icon: Sparkles,
+    title: "Limpieza Profunda",
+    description: "Limpieza exhaustiva de espacios residenciales y comerciales con productos profesionales y técnicas especializadas.",
   },
   {
     icon: Home,
-    title: "Remodelación",
-    description: "Renovamos y modernizamos espacios existentes, adaptándolos a tus necesidades actuales.",
+    title: "Limpieza Residencial",
+    description: "Servicios de limpieza para hogares, adaptados a tus necesidades con atención personalizada y cuidado de cada detalle.",
   },
   {
-    icon: PaintBucket,
-    title: "Acabados de Lujo",
-    description: "Trabajos de acabado premium con atención meticulosa al detalle y materiales de primera calidad.",
+    icon: Droplets,
+    title: "Restauración de Daños por Agua",
+    description: "Reparación y restauración profesional de daños causados por agua, inundaciones y filtraciones.",
   },
   {
-    icon: Hammer,
-    title: "Mantenimiento",
-    description: "Servicios de mantenimiento preventivo y correctivo para mantener tus espacios en óptimas condiciones.",
+    icon: Wind,
+    title: "Limpieza de Conductos",
+    description: "Servicio especializado de limpieza de sistemas de ventilación y aire acondicionado para mejor calidad del aire.",
   },
   {
-    icon: Ruler,
-    title: "Diseño y Planificación",
-    description: "Asesoría completa en diseño arquitectónico y planificación de proyectos de construcción.",
+    icon: Shield,
+    title: "Desinfección y Sanitización",
+    description: "Protocolos avanzados de desinfección para espacios seguros y saludables con productos certificados.",
   },
   {
     icon: Wrench,
-    title: "Reparaciones",
-    description: "Soluciones rápidas y efectivas para cualquier tipo de reparación en tu propiedad.",
+    title: "Restauración Especializada",
+    description: "Reparación y restauración de daños por incendio, humo y otros desastres con equipo profesional.",
   },
 ];
 
@@ -43,7 +43,7 @@ const Services = () => {
             Nuestros <span className="text-primary">Servicios</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Ofrecemos una amplia gama de servicios de construcción para satisfacer todas tus necesidades
+            Ofrecemos una amplia gama de servicios de limpieza y restauración profesionales
           </p>
         </div>
 

@@ -25,7 +25,7 @@ const contactInfo = [
   {
     icon: Mail,
     title: "Email",
-    details: ["info@miempresa.com", "contacto@miempresa.com"],
+    details: ["info@hands-hands.com", "contacto@hands-hands.com"],
   },
   {
     icon: MapPin,

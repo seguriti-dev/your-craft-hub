@@ -23,21 +23,21 @@ import project3 from "@/assets/project-3.jpg";
 const projects = [
   {
     image: project1,
-    title: "Residencia Moderna",
-    description: "Construcción completa de residencia contemporánea de 350m² con acabados de lujo y diseño minimalista.",
-    category: "Construcción Nueva",
+    title: "Restauración Residencial",
+    description: "Restauración completa de daños por agua en residencia de 250m². Limpieza profunda, desinfección y reparación de superficies afectadas.",
+    category: "Restauración",
   },
   {
     image: project2,
-    title: "Edificio Corporativo",
-    description: "Renovación integral de edificio comercial de 5 pisos con fachada moderna de vidrio y acero.",
-    category: "Remodelación",
+    title: "Oficinas Corporativas",
+    description: "Limpieza profunda y mantenimiento de edificio comercial de 4 pisos. Desinfección total y limpieza de conductos de aire.",
+    category: "Limpieza Comercial",
   },
   {
     image: project3,
-    title: "Cocina Gourmet",
-    description: "Remodelación completa de cocina con encimeras de mármol, electrodomésticos de última generación.",
-    category: "Acabados Premium",
+    title: "Restauración Post-Incendio",
+    description: "Limpieza especializada de daños por humo y hollín. Restauración completa con eliminación de olores y desinfección profunda.",
+    category: "Restauración Especializada",
   },
 ];
 
