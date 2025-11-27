@@ -9,7 +9,7 @@ const Footer = () => {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 items-center">
           <div className="text-center md:text-left">
             <p className="text-white">
-              Servicios profesionales de limpieza y restauración con calidad y compromiso
+              Professional cleaning and restoration services with quality and commitment
             </p>
           </div>
           <div className="flex justify-center">
@@ -21,7 +21,7 @@ const Footer = () => {
           </div>
           <div className="text-center md:text-right">
             <p className="text-white">
-              © {currentYear} Hands-Hands. Todos los derechos reservados.
+              © {currentYear} Hands-Hands. All rights reserved.
             </p>
           </div>
         </div>

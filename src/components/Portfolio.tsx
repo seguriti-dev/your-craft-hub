@@ -23,21 +23,21 @@ import project3 from "@/assets/project-3.jpg";
 const projects = [
   {
     image: project1,
-    title: "Restauración Residencial",
-    description: "Restauración completa de daños por agua en residencia de 250m². Limpieza profunda, desinfección y reparación de superficies afectadas.",
-    category: "Restauración",
+    title: "Residential Restoration",
+    description: "Complete water damage restoration in 250m² residence. Deep cleaning, disinfection, and repair of affected surfaces.",
+    category: "Restoration",
   },
   {
     image: project2,
-    title: "Oficinas Corporativas",
-    description: "Limpieza profunda y mantenimiento de edificio comercial de 4 pisos. Desinfección total y limpieza de conductos de aire.",
-    category: "Limpieza Comercial",
+    title: "Corporate Offices",
+    description: "Deep cleaning and maintenance of 4-story commercial building. Complete disinfection and air duct cleaning.",
+    category: "Commercial Cleaning",
   },
   {
     image: project3,
-    title: "Restauración Post-Incendio",
-    description: "Limpieza especializada de daños por humo y hollín. Restauración completa con eliminación de olores y desinfección profunda.",
-    category: "Restauración Especializada",
+    title: "Post-Fire Restoration",
+    description: "Specialized cleaning of smoke and soot damage. Complete restoration with odor removal and deep disinfection.",
+    category: "Specialized Restoration",
   },
 ];
 
@@ -63,10 +63,10 @@ const Portfolio = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-            Nuestro <span className="text-primary">Portafolio</span>
+            Our <span className="text-primary">Portfolio</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Explora algunos de nuestros proyectos más destacados
+            Explore some of our most outstanding projects
           </p>
         </div>
 

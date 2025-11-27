@@ -19,7 +19,7 @@ const Hero = () => {
       <div className="absolute inset-0 z-0">
         <img
           src={heroImage}
-          alt="Limpieza y restauración profesional"
+          alt="Professional cleaning and restoration"
           className="w-full h-full object-cover"
         />
         <div className="absolute inset-0 bg-gradient-to-r from-foreground/95 via-foreground/85 to-foreground/75" />
@@ -29,14 +29,14 @@ const Hero = () => {
       <div className="container mx-auto px-4 z-10 text-center">
         <div className="max-w-4xl mx-auto space-y-6">
           <h1 className="text-4xl md:text-6xl lg:text-7xl font-bold text-white leading-tight animate-fade-in">
-            Limpieza y Restauración{" "}
+            Professional Cleaning and{" "}
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-              Profesional
+              Restoration
             </span>
           </h1>
           <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
-            Servicios especializados de limpieza y restauración. Transformamos espacios con
-            calidad, profesionalismo y compromiso total.
+            Specialized cleaning and restoration services. We transform spaces with
+            quality, professionalism, and total commitment.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
             <Button
@@ -44,7 +44,7 @@ const Hero = () => {
               onClick={() => scrollToSection("portafolio")}
               className="group"
             >
-              Ver Proyectos
+              View Projects
               <ArrowRight className="ml-2 h-4 w-4 transition-transform group-hover:translate-x-1" />
             </Button>
             <Button
@@ -52,7 +52,7 @@ const Hero = () => {
               variant="secondary"
               onClick={() => scrollToSection("contacto")}
             >
-              Contactar Ahora
+              Contact Now
             </Button>
           </div>
         </div>

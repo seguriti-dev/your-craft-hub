@@ -46,28 +46,28 @@ const Navbar = () => {
               onClick={() => scrollToSection("inicio")}
               className={`${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
-              Inicio
+              Home
             </button>
             <button
               onClick={() => scrollToSection("servicios")}
               className={`${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
-              Servicios
+              Services
             </button>
             <button
               onClick={() => scrollToSection("portafolio")}
               className={`${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
-              Portafolio
+              Portfolio
             </button>
             <button
               onClick={() => scrollToSection("contacto")}
               className={`${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
-              Contacto
+              Contact
             </button>
             <Button onClick={() => scrollToSection("contacto")}>
-              Solicitar Cotización
+              Request Quote
             </Button>
           </div>
 
@@ -87,29 +87,29 @@ const Navbar = () => {
               onClick={() => scrollToSection("inicio")}
               className={`block w-full text-left px-4 py-2 ${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
-              Inicio
+              Home
             </button>
             <button
               onClick={() => scrollToSection("servicios")}
               className={`block w-full text-left px-4 py-2 ${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
-              Servicios
+              Services
             </button>
             <button
               onClick={() => scrollToSection("portafolio")}
               className={`block w-full text-left px-4 py-2 ${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
-              Portafolio
+              Portfolio
             </button>
             <button
               onClick={() => scrollToSection("contacto")}
               className={`block w-full text-left px-4 py-2 ${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
-              Contacto
+              Contact
             </button>
             <div className="px-4">
               <Button onClick={() => scrollToSection("contacto")} className="w-full">
-                Solicitar Cotización
+                Request Quote
               </Button>
             </div>
           </div>
