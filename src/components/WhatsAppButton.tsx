@@ -21,7 +21,7 @@ const WhatsAppButton = () => {
         <MessageCircle className="h-6 w-6" />
       </Button>
       <span className="absolute right-full mr-3 top-1/2 -translate-y-1/2 bg-secondary text-secondary-foreground px-3 py-2 rounded-lg text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap shadow-lg">
-        ¡Envíanos un mensaje!
+        Send us a message!
       </span>
     </button>
   );

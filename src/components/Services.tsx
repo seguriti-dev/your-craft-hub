@@ -4,33 +4,33 @@ import { Card, CardContent } from "@/components/ui/card";
 const services = [
   {
     icon: Sparkles,
-    title: "Limpieza Profunda",
-    description: "Limpieza exhaustiva de espacios residenciales y comerciales con productos profesionales y técnicas especializadas.",
+    title: "Deep Cleaning",
+    description: "Thorough cleaning of residential and commercial spaces with professional products and specialized techniques.",
   },
   {
     icon: Home,
-    title: "Limpieza Residencial",
-    description: "Servicios de limpieza para hogares, adaptados a tus necesidades con atención personalizada y cuidado de cada detalle.",
+    title: "Residential Cleaning",
+    description: "Home cleaning services tailored to your needs with personalized attention and care for every detail.",
   },
   {
     icon: Droplets,
-    title: "Restauración de Daños por Agua",
-    description: "Reparación y restauración profesional de daños causados por agua, inundaciones y filtraciones.",
+    title: "Water Damage Restoration",
+    description: "Professional repair and restoration of water damage, floods, and leaks.",
   },
   {
     icon: Wind,
-    title: "Limpieza de Conductos",
-    description: "Servicio especializado de limpieza de sistemas de ventilación y aire acondicionado para mejor calidad del aire.",
+    title: "Duct Cleaning",
+    description: "Specialized cleaning service for ventilation systems and air conditioning for better air quality.",
   },
   {
     icon: Shield,
-    title: "Desinfección y Sanitización",
-    description: "Protocolos avanzados de desinfección para espacios seguros y saludables con productos certificados.",
+    title: "Disinfection and Sanitization",
+    description: "Advanced disinfection protocols for safe and healthy spaces with certified products.",
   },
   {
     icon: Wrench,
-    title: "Restauración Especializada",
-    description: "Reparación y restauración de daños por incendio, humo y otros desastres con equipo profesional.",
+    title: "Specialized Restoration",
+    description: "Repair and restoration of fire, smoke, and disaster damage with professional equipment.",
   },
 ];
 
@@ -40,10 +40,10 @@ const Services = () => {
       <div className="container mx-auto px-4">
         <div className="text-center mb-16">
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold mb-4">
-            Nuestros <span className="text-primary">Servicios</span>
+            Our <span className="text-primary">Services</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            Ofrecemos una amplia gama de servicios de limpieza y restauración profesionales
+            We offer a wide range of professional cleaning and restoration services
           </p>
         </div>
 
