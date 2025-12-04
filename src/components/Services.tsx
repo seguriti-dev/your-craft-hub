@@ -1,48 +1,55 @@
-import { Sparkles, Home, Droplets, Wind, Shield, Wrench } from "lucide-react";
+import { Waves, Building2, PawPrint, RefreshCw, Eraser, Sofa, Wind } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import deepCleaningImg from "@/assets/service-deep-cleaning.jpg";
-import residentialImg from "@/assets/service-residential.jpg";
-import waterDamageImg from "@/assets/service-water-damage.jpg";
-import ductCleaningImg from "@/assets/service-duct-cleaning.jpg";
-import disinfectionImg from "@/assets/service-disinfection.jpg";
-import restorationImg from "@/assets/service-restoration.jpg";
+import steamCarpetImg from "@/assets/service-steam-carpet.jpg";
+import deepSteamImg from "@/assets/service-deep-steam.jpg";
+import petTreatmentImg from "@/assets/service-pet-treatment.jpg";
+import carpetRestorationImg from "@/assets/service-carpet-restoration.jpg";
+import stainRemovalImg from "@/assets/service-stain-removal.jpg";
+import upholsteryImg from "@/assets/service-upholstery.jpg";
+import odorControlImg from "@/assets/service-odor-control.jpg";
 
 const services = [
   {
-    icon: Sparkles,
-    title: "Deep Cleaning",
-    description: "Thorough cleaning of residential and commercial spaces with professional products and specialized techniques.",
-    image: deepCleaningImg,
+    icon: Waves,
+    title: "Steam Carpet Cleaning",
+    description: "Professional hot water extraction cleaning that penetrates deep into carpet fibers, removing dirt, allergens, and bacteria for a thorough clean.",
+    image: steamCarpetImg,
   },
   {
-    icon: Home,
-    title: "Residential Cleaning",
-    description: "Home cleaning services tailored to your needs with personalized attention and care for every detail.",
-    image: residentialImg,
+    icon: Building2,
+    title: "Deep Commercial & Residential Steam Cleaning",
+    description: "Comprehensive steam cleaning services for homes and businesses, using industrial-grade equipment to restore carpets to like-new condition.",
+    image: deepSteamImg,
   },
   {
-    icon: Droplets,
-    title: "Water Damage Restoration",
-    description: "Professional repair and restoration of water damage, floods, and leaks.",
-    image: waterDamageImg,
+    icon: PawPrint,
+    title: "Pet Treatment",
+    description: "Specialized enzyme treatments that eliminate pet stains and odors at the source, keeping your home fresh and hygienic for your furry friends.",
+    image: petTreatmentImg,
+  },
+  {
+    icon: RefreshCw,
+    title: "Carpet Restoration",
+    description: "Revive worn, damaged, or heavily soiled carpets with our professional restoration services that bring back color, texture, and softness.",
+    image: carpetRestorationImg,
+  },
+  {
+    icon: Eraser,
+    title: "Stain Removal",
+    description: "Expert stain removal for wine, coffee, ink, grease, and other tough stains using advanced techniques and professional-grade solutions.",
+    image: stainRemovalImg,
+  },
+  {
+    icon: Sofa,
+    title: "Upholstery Cleaning",
+    description: "Gentle yet effective cleaning for sofas, chairs, and other upholstered furniture, removing dirt and stains while preserving fabric quality.",
+    image: upholsteryImg,
   },
   {
     icon: Wind,
-    title: "Duct Cleaning",
-    description: "Specialized cleaning service for ventilation systems and air conditioning for better air quality.",
-    image: ductCleaningImg,
-  },
-  {
-    icon: Shield,
-    title: "Disinfection and Sanitization",
-    description: "Advanced disinfection protocols for safe and healthy spaces with certified products.",
-    image: disinfectionImg,
-  },
-  {
-    icon: Wrench,
-    title: "Specialized Restoration",
-    description: "Repair and restoration of fire, smoke, and disaster damage with professional equipment.",
-    image: restorationImg,
+    title: "Odor Control",
+    description: "Complete odor elimination services that neutralize unpleasant smells from pets, smoke, mold, and more, leaving your space fresh and clean.",
+    image: odorControlImg,
   },
 ];
 
@@ -55,7 +62,7 @@ const Services = () => {
             Our <span className="text-primary">Services</span>
           </h2>
           <p className="text-muted-foreground text-lg max-w-2xl mx-auto">
-            We offer a wide range of professional cleaning and restoration services
+            Professional carpet and upholstery cleaning services for homes and businesses
           </p>
         </div>
 
