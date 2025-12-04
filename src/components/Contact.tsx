@@ -20,17 +20,17 @@ const contactInfo = [
   {
     icon: Phone,
     title: "Phone",
-    details: ["+52 (555) 123-4567", "+52 (555) 987-6543"],
+    details: ["+1 (555) 123-4567", "+1 (555) 987-6543"],
   },
   {
     icon: Mail,
     title: "Email",
-    details: ["info@hands-hands.com", "contacto@hands-hands.com"],
+    details: ["info@hands-hands.com", "contact@hands-hands.com"],
   },
   {
     icon: MapPin,
     title: "Location",
-    details: ["123 Construction Ave", "Mexico City, CDMX 01234"],
+    details: ["123 Main Street", "New York, NY 10001"],
   },
   {
     icon: Clock,
@@ -76,7 +76,7 @@ const Contact = () => {
     );
     
     // Open WhatsApp with the message
-    window.open(`https://wa.me/5215551234567?text=${encodedMessage}`, "_blank");
+    window.open(`https://wa.me/15551234567?text=${encodedMessage}`, "_blank");
     
     toast({
       title: "Message sent",
@@ -147,7 +147,7 @@ const Contact = () => {
                       <FormItem>
                         <FormLabel>Phone</FormLabel>
                         <FormControl>
-                          <Input placeholder="+52 555 123 4567" {...field} />
+                          <Input placeholder="+1 555 123 4567" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
