@@ -1,5 +1,14 @@
 import { Star, Quote } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { useEffect, useState } from "react";
+import Autoplay from "embla-carousel-autoplay";
 
 import review1 from "@/assets/review-1.jpg";
 import review2 from "@/assets/review-2.jpg";
@@ -60,6 +69,10 @@ const reviews = [
 ];
 
 const Reviews = () => {
+  const [plugin] = useState(() =>
+    Autoplay({ delay: 4000, stopOnInteraction: true })
+  );
+
   return (
     <section id="reviews" className="py-20 bg-muted/50">
       <div className="container mx-auto px-4">
@@ -72,33 +85,46 @@ const Reviews = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-          {reviews.map((review, index) => (
-            <Card key={index} className="overflow-hidden group hover:shadow-lg transition-shadow duration-300">
-              <div className="relative h-48 overflow-hidden">
-                <img
-                  src={review.image}
-                  alt={`Cleaning result by ${review.name}`}
-                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                />
-                <div className="absolute top-3 right-3 bg-primary/90 text-primary-foreground p-2 rounded-full backdrop-blur-sm">
-                  <Quote className="h-4 w-4" />
-                </div>
-              </div>
-              <CardContent className="p-4">
-                <div className="flex gap-1 mb-2">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-4 w-4 fill-primary text-primary" />
-                  ))}
-                </div>
-                <p className="text-muted-foreground text-sm mb-3 italic">
-                  "{review.review}"
-                </p>
-                <p className="font-semibold text-foreground">— {review.name}</p>
-              </CardContent>
-            </Card>
-          ))}
-        </div>
+        <Carousel
+          opts={{
+            align: "start",
+            loop: true,
+          }}
+          plugins={[plugin]}
+          className="w-full max-w-5xl mx-auto"
+        >
+          <CarouselContent className="-ml-4">
+            {reviews.map((review, index) => (
+              <CarouselItem key={index} className="pl-4 md:basis-1/2">
+                <Card className="overflow-hidden group hover:shadow-lg transition-shadow duration-300 h-full">
+                  <div className="relative h-48 overflow-hidden">
+                    <img
+                      src={review.image}
+                      alt={`Cleaning result by ${review.name}`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                    <div className="absolute top-3 right-3 bg-primary/90 text-primary-foreground p-2 rounded-full backdrop-blur-sm">
+                      <Quote className="h-4 w-4" />
+                    </div>
+                  </div>
+                  <CardContent className="p-4">
+                    <div className="flex gap-1 mb-2">
+                      {[...Array(5)].map((_, i) => (
+                        <Star key={i} className="h-4 w-4 fill-primary text-primary" />
+                      ))}
+                    </div>
+                    <p className="text-muted-foreground text-sm mb-3 italic">
+                      "{review.review}"
+                    </p>
+                    <p className="font-semibold text-foreground">— {review.name}</p>
+                  </CardContent>
+                </Card>
+              </CarouselItem>
+            ))}
+          </CarouselContent>
+          <CarouselPrevious className="hidden md:flex -left-12" />
+          <CarouselNext className="hidden md:flex -right-12" />
+        </Carousel>
       </div>
     </section>
   );
