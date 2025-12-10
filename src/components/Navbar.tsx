@@ -30,7 +30,7 @@ const Navbar = () => {
         isScrolled 
           ? "bg-background/95 backdrop-blur-sm shadow-md" 
           : isMobileMenuOpen 
-            ? "bg-background/80 backdrop-blur-md" 
+            ? "bg-background/5 backdrop-blur-md" 
             : "bg-transparent"
       }`}
     >

@@ -1,4 +1,4 @@
-import logoWhite from "@/assets/logo-white.svg";
+import logoWhite from "@/assets/logo-white_resize.svg";
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
