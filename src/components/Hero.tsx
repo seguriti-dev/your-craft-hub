@@ -22,7 +22,7 @@ const Hero = () => {
           alt="Professional cleaning and restoration"
           className="w-full h-full object-cover"
         />
-        <div className="absolute inset-0 bg-gradient-to-r from-foreground/95 via-foreground/85 to-foreground/75" />
+        <div className="absolute inset-0 bg-gradient-to-r from-foreground/85 via-foreground/75 to-foreground/65" />
       </div>
 
       {/* Content */}
