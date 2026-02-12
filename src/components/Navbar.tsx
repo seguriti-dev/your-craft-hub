@@ -59,7 +59,7 @@ const Navbar = () => {
               Services
             </button>
             <button
-              onClick={() => scrollToSection("portafolio")}
+              onClick={() => scrollToSection("reviews")}
               className={`${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
               Portfolio
