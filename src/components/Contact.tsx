@@ -210,7 +210,7 @@ const Contact = () => {
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormLabel className="cursor-pointer">Urgent Request <span className="italic">(Higher fees)</span></FormLabel>
+                        <FormLabel className="cursor-pointer">Urgent Request</FormLabel>
                       </FormItem>
                     )}
                   />
