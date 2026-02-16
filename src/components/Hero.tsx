@@ -35,7 +35,7 @@ const Hero = () => {
             </span>
           </h1>
           <p className="text-lg md:text-xl text-white/90 max-w-2xl mx-auto">
-            Specialized cleaning and restoration services. We transform spaces with
+            Specialized cleaning and restoration services for business and residential properties. We transform spaces with
             quality, professionalism, and total commitment.
           </p>
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center pt-4">
