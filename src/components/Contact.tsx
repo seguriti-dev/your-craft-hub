@@ -31,7 +31,7 @@ const contactInfo = [
   {
     icon: MapPin,
     title: "Location",
-    details: ["123 Main Street", "New York, NY 10001"],
+    details: ["", "Colorado"],
   },
   {
     icon: Clock,
