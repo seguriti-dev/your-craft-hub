@@ -143,7 +143,7 @@ const ServiceCarousel = ({ services }: { services: ServiceItem[] }) => {
         {services.map((service, index) => {
           const Icon = service.icon;
           return (
-            <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+            <CarouselItem key={index} className="pl-4 basis-full">
               <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-border/50 overflow-hidden h-full">
                 <div className="relative">
                   <img src={service.image} alt={service.title} className="w-full h-48 object-cover" />
@@ -160,8 +160,8 @@ const ServiceCarousel = ({ services }: { services: ServiceItem[] }) => {
           );
         })}
       </CarouselContent>
-      <CarouselPrevious className="hidden md:flex -left-12" />
-      <CarouselNext className="hidden md:flex -right-12" />
+      <CarouselPrevious className="-left-12 hidden md:flex" />
+      <CarouselNext className="-right-12 hidden md:flex" />
     </Carousel>
   );
 };
