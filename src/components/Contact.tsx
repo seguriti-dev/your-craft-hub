@@ -57,6 +57,12 @@ const formSchema = z.object({
     .min(10, { message: "Number must have at least 10 digits" })
     .max(15, { message: "Number must be less than 15 digits" })
     .regex(/^[0-9+\s()-]+$/, { message: "Invalid phone format" }),
+  zipCode: z
+    .string()
+    .trim()
+    .min(5, { message: "Zip code must be at least 5 characters" })
+    .max(10, { message: "Zip code must be less than 10 characters" })
+    .regex(/^[0-9-]+$/, { message: "Invalid zip code format" }),
   message: z
     .string()
     .trim()
@@ -72,6 +78,7 @@ const Contact = () => {
     defaultValues: {
       name: "",
       phone: "",
+      zipCode: "",
       message: "",
       urgent: false,
     },
@@ -81,7 +88,7 @@ const Contact = () => {
     // Encode values for SMS/WhatsApp
     const urgentTag = values.urgent ? "⚠️ URGENT REQUEST\n" : "";
     const encodedMessage = encodeURIComponent(
-      `${urgentTag}Name: ${values.name}\nPhone: ${values.phone}\nMessage: ${values.message}`
+      `${urgentTag}Name: ${values.name}\nPhone: ${values.phone}\nZip Code: ${values.zipCode}\nMessage: ${values.message}`
     );
     
     // Open WhatsApp with the message
@@ -157,6 +164,19 @@ const Contact = () => {
                         <FormLabel>Phone</FormLabel>
                         <FormControl>
                           <Input placeholder="+1 555 123 4567" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="zipCode"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Zip Code</FormLabel>
+                        <FormControl>
+                          <Input placeholder="80202" {...field} />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
