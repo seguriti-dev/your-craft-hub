@@ -1,57 +1,170 @@
-import { Waves, Building2, PawPrint, RefreshCw, Eraser, Sofa, Wind } from "lucide-react";
+import { Waves, Building2, PawPrint, RefreshCw, Eraser, Sofa, Wind, HardHat, Droplets, Shield } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
-import steamCarpetImg from "@/assets/service-steam-carpet.jpg";
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel";
+import { useState } from "react";
+import Autoplay from "embla-carousel-autoplay";
+
 import deepSteamImg from "@/assets/service-deep-steam.jpg";
 import petTreatmentImg from "@/assets/service-pet-treatment.jpg";
-import carpetRestorationImg from "@/assets/service-carpet-restoration.jpg";
 import stainRemovalImg from "@/assets/service-stain-removal.jpg";
 import upholsteryImg from "@/assets/service-upholstery.jpg";
 import odorControlImg from "@/assets/service-odor-control.jpg";
+import carpetRestorationImg from "@/assets/service-carpet-restoration.jpg";
+import mitigationImg from "@/assets/service-mitigation.jpg";
+import waterExtractionImg from "@/assets/service-water-extraction.jpg";
 
-const services = [
+type ServiceItem = {
+  icon: React.ElementType;
+  title: string;
+  description: string;
+  image: string;
+};
+
+type ServiceSubsection = {
+  title: string;
+  subtitle: string;
+  services: ServiceItem[];
+};
+
+const subsections: ServiceSubsection[] = [
   {
-    icon: Waves,
     title: "Steam Carpet Cleaning",
-    description: "Professional hot water extraction cleaning that penetrates deep into carpet fibers, removing dirt, allergens, and bacteria for a thorough clean.",
-    image: steamCarpetImg,
+    subtitle: "Professional hot water extraction and steam cleaning solutions",
+    services: [
+      {
+        icon: Building2,
+        title: "Deep Commercial & Residential Steam Cleaning",
+        description: "Comprehensive steam cleaning services for homes and businesses, using industrial-grade equipment to restore carpets to like-new condition.",
+        image: deepSteamImg,
+      },
+      {
+        icon: PawPrint,
+        title: "Pet Treatment",
+        description: "Specialized enzyme treatments that eliminate pet stains and odors at the source, keeping your home fresh and hygienic for your furry friends.",
+        image: petTreatmentImg,
+      },
+      {
+        icon: Eraser,
+        title: "Stain Removal",
+        description: "Expert stain removal for wine, coffee, ink, grease, and other tough stains using advanced techniques and professional-grade solutions.",
+        image: stainRemovalImg,
+      },
+      {
+        icon: Sofa,
+        title: "Upholstery Cleaning",
+        description: "Gentle yet effective cleaning for sofas, chairs, and other upholstered furniture, removing dirt and stains while preserving fabric quality.",
+        image: upholsteryImg,
+      },
+      {
+        icon: Wind,
+        title: "Odor Control",
+        description: "Complete odor elimination services that neutralize unpleasant smells from pets, smoke, mold, and more, leaving your space fresh and clean.",
+        image: odorControlImg,
+      },
+    ],
   },
   {
-    icon: Building2,
-    title: "Deep Commercial & Residential Steam Cleaning",
-    description: "Comprehensive steam cleaning services for homes and businesses, using industrial-grade equipment to restore carpets to like-new condition.",
-    image: deepSteamImg,
+    title: "Restoration & Renovation",
+    subtitle: "Bring your carpets and flooring back to life",
+    services: [
+      {
+        icon: RefreshCw,
+        title: "Carpet Restoration",
+        description: "Revive worn, damaged, or heavily soiled carpets with our professional restoration services that bring back color, texture, and softness.",
+        image: carpetRestorationImg,
+      },
+    ],
   },
   {
-    icon: PawPrint,
-    title: "Pet Treatment",
-    description: "Specialized enzyme treatments that eliminate pet stains and odors at the source, keeping your home fresh and hygienic for your furry friends.",
-    image: petTreatmentImg,
+    title: "Site Management",
+    subtitle: "On-site damage assessment and risk mitigation",
+    services: [
+      {
+        icon: Shield,
+        title: "Mitigation",
+        description: "Rapid on-site damage assessment and containment to prevent further deterioration, with professional planning and coordination for full restoration.",
+        image: mitigationImg,
+      },
+    ],
   },
   {
-    icon: RefreshCw,
-    title: "Carpet Restoration",
-    description: "Revive worn, damaged, or heavily soiled carpets with our professional restoration services that bring back color, texture, and softness.",
-    image: carpetRestorationImg,
-  },
-  {
-    icon: Eraser,
-    title: "Stain Removal",
-    description: "Expert stain removal for wine, coffee, ink, grease, and other tough stains using advanced techniques and professional-grade solutions.",
-    image: stainRemovalImg,
-  },
-  {
-    icon: Sofa,
-    title: "Upholstery Cleaning",
-    description: "Gentle yet effective cleaning for sofas, chairs, and other upholstered furniture, removing dirt and stains while preserving fabric quality.",
-    image: upholsteryImg,
-  },
-  {
-    icon: Wind,
-    title: "Odor Control",
-    description: "Complete odor elimination services that neutralize unpleasant smells from pets, smoke, mold, and more, leaving your space fresh and clean.",
-    image: odorControlImg,
+    title: "Water Extraction",
+    subtitle: "Emergency water removal and drying services",
+    services: [
+      {
+        icon: Droplets,
+        title: "Water Extraction",
+        description: "Fast-response water extraction using industrial-grade pumps and vacuums to remove standing water from floods, leaks, or burst pipes, minimizing damage to your property.",
+        image: waterExtractionImg,
+      },
+    ],
   },
 ];
+
+const ServiceCarousel = ({ services }: { services: ServiceItem[] }) => {
+  const [plugin] = useState(() =>
+    Autoplay({ delay: 5000, stopOnInteraction: true })
+  );
+
+  if (services.length === 1) {
+    const service = services[0];
+    const Icon = service.icon;
+    return (
+      <div className="max-w-md mx-auto">
+        <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-border/50 overflow-hidden">
+          <div className="relative">
+            <img src={service.image} alt={service.title} className="w-full h-48 object-cover" />
+            <div className="absolute top-4 left-4 p-3 rounded-lg bg-primary/90 text-primary-foreground backdrop-blur-sm">
+              <Icon className="h-6 w-6" />
+            </div>
+          </div>
+          <CardContent className="p-6">
+            <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
+            <p className="text-muted-foreground">{service.description}</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
+  return (
+    <Carousel
+      opts={{ align: "start", loop: true }}
+      plugins={[plugin]}
+      className="w-full max-w-5xl mx-auto"
+    >
+      <CarouselContent className="-ml-4">
+        {services.map((service, index) => {
+          const Icon = service.icon;
+          return (
+            <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+              <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-border/50 overflow-hidden h-full">
+                <div className="relative">
+                  <img src={service.image} alt={service.title} className="w-full h-48 object-cover" />
+                  <div className="absolute top-4 left-4 p-3 rounded-lg bg-primary/90 text-primary-foreground backdrop-blur-sm">
+                    <Icon className="h-6 w-6" />
+                  </div>
+                </div>
+                <CardContent className="p-6">
+                  <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
+                  <p className="text-muted-foreground">{service.description}</p>
+                </CardContent>
+              </Card>
+            </CarouselItem>
+          );
+        })}
+      </CarouselContent>
+      <CarouselPrevious className="hidden md:flex -left-12" />
+      <CarouselNext className="hidden md:flex -right-12" />
+    </Carousel>
+  );
+};
 
 const Services = () => {
   return (
@@ -66,31 +179,20 @@ const Services = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {services.map((service, index) => {
-            const Icon = service.icon;
-            return (
-              <Card
-                key={index}
-                className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-border/50 overflow-hidden"
-              >
-                <div className="relative">
-                  <img 
-                    src={service.image} 
-                    alt={service.title}
-                    className="w-full h-48 object-cover"
-                  />
-                  <div className="absolute top-4 left-4 p-3 rounded-lg bg-primary/90 text-primary-foreground backdrop-blur-sm">
-                    <Icon className="h-6 w-6" />
-                  </div>
-                </div>
-                <CardContent className="p-6">
-                  <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
-                  <p className="text-muted-foreground">{service.description}</p>
-                </CardContent>
-              </Card>
-            );
-          })}
+        <div className="space-y-16">
+          {subsections.map((subsection, index) => (
+            <div key={index}>
+              <div className="text-center mb-8">
+                <h3 className="text-2xl md:text-3xl font-bold text-foreground mb-2">
+                  {subsection.title}
+                </h3>
+                <p className="text-muted-foreground max-w-xl mx-auto">
+                  {subsection.subtitle}
+                </p>
+              </div>
+              <ServiceCarousel services={subsection.services} />
+            </div>
+          ))}
         </div>
       </div>
     </section>
