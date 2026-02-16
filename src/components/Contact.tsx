@@ -20,12 +20,12 @@ const contactInfo = [
   {
     icon: Phone,
     title: "Phone",
-    details: ["+1 (555) 123-4567", "+1 (555) 987-6543"],
+    details: ["+1 (720) 255-7466", "+1 (720) 255-7466"],
   },
   {
     icon: Mail,
     title: "Email",
-    details: ["info@hands-hands.com", "contact@hands-hands.com"],
+    details: ["handshands.contact@gmail.com", ""],
   },
   {
     icon: MapPin,
