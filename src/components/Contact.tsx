@@ -1,4 +1,4 @@
-import { Phone, Mail, MapPin, Clock } from "lucide-react";
+import { Phone, Mail, MapPin, Clock, Toolbox } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,9 +38,9 @@ const contactInfo = [
     details: ["Mon - Fri: 8:00 AM - 6:00 PM", "Sat: 9:00 AM - 2:00 PM"],
   },
   {
-    icon: Clock,
+    icon: Toolbox,
     title: "Working Hours",
-    details: ["Mon - Fri: 7:00 AM - 7:00 PM", "Sat: 8:00 AM - 4:00 PM"],
+    details: ["24 Hours", "For urgent calls"],
   },
 ];
 
