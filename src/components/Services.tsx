@@ -112,27 +112,6 @@ const ServiceCarousel = ({ services }: { services: ServiceItem[] }) => {
     Autoplay({ delay: 5000, stopOnInteraction: true })
   );
 
-  if (services.length === 1) {
-    const service = services[0];
-    const Icon = service.icon;
-    return (
-      <div className="max-w-md mx-auto">
-        <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-border/50 overflow-hidden">
-          <div className="relative">
-            <img src={service.image} alt={service.title} className="w-full h-48 object-cover" />
-            <div className="absolute top-4 left-4 p-3 rounded-lg bg-primary/90 text-primary-foreground backdrop-blur-sm">
-              <Icon className="h-6 w-6" />
-            </div>
-          </div>
-          <CardContent className="p-6">
-            <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
-            <p className="text-muted-foreground">{service.description}</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <Carousel
       opts={{ align: "start", loop: true }}
