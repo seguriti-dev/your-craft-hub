@@ -3,6 +3,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -61,6 +62,7 @@ const formSchema = z.object({
     .trim()
     .min(1, { message: "Message is required" })
     .max(500, { message: "Message must be less than 500 characters" }),
+  urgent: z.boolean().default(false),
 });
 
 const Contact = () => {
@@ -71,13 +73,15 @@ const Contact = () => {
       name: "",
       phone: "",
       message: "",
+      urgent: false,
     },
   });
 
   const onSubmit = (values: z.infer<typeof formSchema>) => {
     // Encode values for SMS/WhatsApp
+    const urgentTag = values.urgent ? "⚠️ URGENT REQUEST\n" : "";
     const encodedMessage = encodeURIComponent(
-      `Name: ${values.name}\nPhone: ${values.phone}\nMessage: ${values.message}`
+      `${urgentTag}Name: ${values.name}\nPhone: ${values.phone}\nMessage: ${values.message}`
     );
     
     // Open WhatsApp with the message
@@ -172,6 +176,21 @@ const Contact = () => {
                           />
                         </FormControl>
                         <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <FormField
+                    control={form.control}
+                    name="urgent"
+                    render={({ field }) => (
+                      <FormItem className="flex flex-row items-center space-x-3 space-y-0">
+                        <FormControl>
+                          <Checkbox
+                            checked={field.value}
+                            onCheckedChange={field.onChange}
+                          />
+                        </FormControl>
+                        <FormLabel className="cursor-pointer">Urgent Request</FormLabel>
                       </FormItem>
                     )}
                   />
