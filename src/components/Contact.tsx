@@ -34,8 +34,13 @@ const contactInfo = [
   },
   {
     icon: Clock,
-    title: "Hours",
+    title: "Attention Hours",
     details: ["Mon - Fri: 8:00 AM - 6:00 PM", "Sat: 9:00 AM - 2:00 PM"],
+  },
+  {
+    icon: Clock,
+    title: "Working Hours",
+    details: ["Mon - Fri: 7:00 AM - 7:00 PM", "Sat: 8:00 AM - 4:00 PM"],
   },
 ];
 
@@ -97,7 +102,7 @@ const Contact = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 max-w-6xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
           {contactInfo.map((info, index) => {
             const Icon = info.icon;
             return (
