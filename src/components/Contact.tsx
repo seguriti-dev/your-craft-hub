@@ -41,7 +41,7 @@ const contactInfo = [
   {
     icon: Toolbox,
     title: "Working Hours",
-    details: ["24 Hours", "For urgent calls"],
+    details: ["24 Hours", "For urgent requests"],
   },
 ];
 
@@ -113,7 +113,7 @@ const Contact = () => {
           </p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6 max-w-7xl mx-auto">
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
           {contactInfo.map((info, index) => {
             const Icon = info.icon;
             return (
@@ -127,7 +127,7 @@ const Contact = () => {
                   </div>
                   <h3 className="text-lg font-semibold mb-3">{info.title}</h3>
                   {info.details.map((detail, idx) => (
-                    <p key={idx} className="text-muted-foreground text-sm mb-1">
+                    <p key={idx} className="text-muted-foreground text-pretty text-sm mb-1">
                       {detail}
                     </p>
                   ))}
@@ -210,7 +210,7 @@ const Contact = () => {
                             onCheckedChange={field.onChange}
                           />
                         </FormControl>
-                        <FormLabel className="cursor-pointer">Urgent Request</FormLabel>
+                        <FormLabel className="cursor-pointer">Urgent Request <span className="italic">(Higher fees)</span></FormLabel>
                       </FormItem>
                     )}
                   />
