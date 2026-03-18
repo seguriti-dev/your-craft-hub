@@ -16,6 +16,8 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
+import { sendContactSMS } from "@/utils/api";
+import { useState } from "react";
 
 const contactInfo = [
   {
@@ -66,13 +68,15 @@ const formSchema = z.object({
   message: z
     .string()
     .trim()
-    .min(1, { message: "Message is required" })
+    .min(10, { message: "Message must be at least 10 characters" })
     .max(500, { message: "Message must be less than 500 characters" }),
   urgent: z.boolean().default(false),
 });
 
 const Contact = () => {
   const { toast } = useToast();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -84,23 +88,51 @@ const Contact = () => {
     },
   });
 
-  const onSubmit = (values: z.infer<typeof formSchema>) => {
-    // Encode values for SMS/WhatsApp
-    const urgentTag = values.urgent ? "⚠️ URGENT REQUEST\n" : "";
-    const encodedMessage = encodeURIComponent(
-      `${urgentTag}Name: ${values.name}\nPhone: ${values.phone}\nZip Code: ${values.zipCode}\nMessage: ${values.message}`
-    );
-    
-    // Open WhatsApp with the message - deprecated
-    window.open(`https://wa.me/15551234567?text=${encodedMessage}`, "_blank");
-    
-    toast({
-      title: "Message sent",
-      description: "We will contact you soon.",
-    });
-    
-    form.reset();
+  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    setIsSubmitting(true);
+
+    try {
+      // Send SMS via API
+      const result = await sendContactSMS(values);
+
+      if (result.success) {
+        toast({
+          title: "✅ Message sent successfully",
+          description: "We will contact you soon. Thank you!",
+          variant: "default",
+        });
+        
+        // Reset form on success
+        form.reset();
+      } else {
+        // Handle API errors
+        let errorDescription = result.error || "Please try again later.";
+        
+        // Personalized error messages
+        if (result.error?.includes("Too many requests") || result.error?.includes("Demasiadas solicitudes")) {
+          errorDescription = "You have reached the request limit. Please try again in 1 hour.";
+        } else if (result.error?.includes("temporarily unavailable") || result.error?.includes("temporalmente no disponible")) {
+          errorDescription = "Service temporarily unavailable. Please try again in a few minutes.";
+        }
+        
+        toast({
+          title: "❌ Error sending message",
+          description: errorDescription,
+          variant: "destructive",
+        });
+      }
+    } catch (error) {
+      console.error("Unexpected error:", error);
+      toast({
+        title: "❌ Unexpected error",
+        description: "Something went wrong. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
+
   return (
     <section id="contacto" className="py-20 bg-muted/30">
       <div className="container mx-auto px-4">
@@ -150,7 +182,11 @@ const Contact = () => {
                       <FormItem>
                         <FormLabel>Name</FormLabel>
                         <FormControl>
-                          <Input placeholder="Your full name" {...field} />
+                          <Input 
+                            placeholder="Your full name" 
+                            {...field} 
+                            disabled={isSubmitting}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -163,7 +199,11 @@ const Contact = () => {
                       <FormItem>
                         <FormLabel>Phone</FormLabel>
                         <FormControl>
-                          <Input placeholder="+1 555 123 4567" {...field} />
+                          <Input 
+                            placeholder="+1 555 123 4567" 
+                            {...field} 
+                            disabled={isSubmitting}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -176,7 +216,11 @@ const Contact = () => {
                       <FormItem>
                         <FormLabel>Zip Code</FormLabel>
                         <FormControl>
-                          <Input placeholder="80202" {...field} />
+                          <Input 
+                            placeholder="80202" 
+                            {...field} 
+                            disabled={isSubmitting}
+                          />
                         </FormControl>
                         <FormMessage />
                       </FormItem>
@@ -193,6 +237,7 @@ const Contact = () => {
                             placeholder="Describe your project..."
                             className="min-h-[120px]"
                             {...field}
+                            disabled={isSubmitting}
                           />
                         </FormControl>
                         <FormMessage />
@@ -208,14 +253,28 @@ const Contact = () => {
                           <Checkbox
                             checked={field.value}
                             onCheckedChange={field.onChange}
+                            disabled={isSubmitting}
                           />
                         </FormControl>
-                        <FormLabel className="cursor-pointer">Urgent Request</FormLabel>
+                        <FormLabel className="cursor-pointer">
+                          Urgent Request (24h service available)
+                        </FormLabel>
                       </FormItem>
                     )}
                   />
-                  <Button type="submit" className="w-full" size="lg">
-                    Send Message
+                  <Button 
+                    type="submit" 
+                    className="w-full" 
+                    size="lg"
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>
+                        <span className="animate-pulse">Sending...</span>
+                      </>
+                    ) : (
+                      "Send Message"
+                    )}
                   </Button>
                 </form>
               </Form>
