@@ -1,73 +1,189 @@
-# Welcome to your Lovable project
+# Hands-Hands
 
-## Project info
+## 📋 Prerequisites
 
-**URL**: https://lovable.dev/projects/61416257-02dc-44a9-a5da-70742de59ab7
+- Node.js 18+ installed
+- AWS Account with SNS configured
+- Netlify account
+- IAM user with `sns:Publish` permissions
 
-## How can I edit this code?
+## 🚀 Setup Instructions
 
-There are several ways of editing your application.
+### 1. Install Dependencies
 
-**Use Lovable**
+```bash
+npm install
+```
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/61416257-02dc-44a9-a5da-70742de59ab7) and start prompting.
+### 2. Configure Environment Variables
 
-Changes made via Lovable will be committed automatically to this repo.
+#### For Local Development:
 
-**Use your preferred IDE**
+Create a `.env` file in the root directory:
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+```env
+AWS_ACCESS_KEY_ID=your_access_key_here
+AWS_SECRET_ACCESS_KEY=your_secret_key_here
+AWS_REGION=us-east-1
+BUSINESS_PHONE_NUMBER=+17202557466
+ALLOWED_ORIGIN=http://localhost:5173
+```
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+#### For Netlify Production:
 
-Follow these steps:
+Go to **Site settings** → **Environment variables** and add:
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+- `AWS_ACCESS_KEY_ID`
+- `AWS_SECRET_ACCESS_KEY`
+- `AWS_REGION`
+- `BUSINESS_PHONE_NUMBER`
+- `ALLOWED_ORIGIN` (your production domain)
+- `TOLL_FREE_NUMBER` (optional, when available)
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+### 3. Verify Phone Number in AWS SNS Sandbox
 
-# Step 3: Install the necessary dependencies.
-npm i
+**Important**: In Sandbox mode, you must verify the business phone number:
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
+1. Go to AWS SNS Console
+2. Navigate to **Text messaging (SMS)** → **Sandbox destination phone numbers**
+3. Click **Add phone number**
+4. Enter your business phone: `+17202557466`
+5. Verify with the OTP code sent via SMS
+
+### 4. Run Development Server
+
+```bash
 npm run dev
 ```
 
-**Edit a file directly in GitHub**
+The app will be available at `http://localhost:5173`  
+Netlify Functions will run at `http://localhost:8888`
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+### 5. Test the Form
 
-**Use GitHub Codespaces**
+1. Fill out the contact form
+2. Submit
+3. Check if SMS arrives at the business phone number
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+## 📂 Project Structure
 
-## What technologies are used for this project?
+```
+├── src/
+│   ├── components/
+│   │   └── Contact.tsx          # Contact form component
+│   └── utils/
+│       └── api.ts                # API client utility
+├── netlify/
+│   └── functions/
+│       └── send-sms.js           # Serverless function for SMS
+├── .env.example                  # Environment variables template
+├── netlify.toml                  # Netlify configuration
+└── package.json
+```
 
-This project is built with:
+## 🔒 Security Features
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+### Rate Limiting
 
-## How can I deploy this project?
+**Per IP:**
+- 3 requests per hour per IP address
+- 1 hour block if exceeded
 
-Simply open [Lovable](https://lovable.dev/projects/61416257-02dc-44a9-a5da-70742de59ab7) and click on Share -> Publish.
+**Global:**
+- 100 total SMS per hour
+- Prevents cost overruns
 
-## Can I connect a custom domain to my Lovable project?
+### Input Validation
 
-Yes, you can!
+- Name: 1-100 characters
+- Phone: 10-15 digits, valid format
+- Zip Code: 5-10 characters, numbers only
+- Message: 10-500 characters
+- All inputs sanitized against XSS
 
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
+### CORS Protection
 
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+- Only allowed origins can make requests
+- Configure `ALLOWED_ORIGIN` in production
+
+## 📱 SMS Message Format
+
+```
+🚨 URGENT REQUEST 🚨 (if urgent checkbox is checked)
+
+NEW CONTACT FROM WEBSITE
+
+Name: John Doe
+Phone: +1 555 123 4567
+Zip Code: 80202
+
+Message:
+I need help with a kitchen remodel...
+
+---
+Submitted: 3/10/2026, 2:30:00 PM MT
+```
+
+## 💰 Cost Estimation
+
+**AWS SNS Sandbox (Free Tier):**
+- First 100 SMS: Free
+- After: ~$0.00645 per SMS (US)
+
+**Production with Toll-Free:**
+- Toll-Free number: ~$2/month
+- SMS outbound: ~$0.0075 per message
+- Example: 500 SMS/month = $2 + $3.75 = $5.75/month
+
+## 🚨 Moving to Production
+
+### Exit Sandbox Mode
+
+See AWS Support ticket instructions in the main documentation.
+
+### Enable Toll-Free Number
+
+Uncomment in `send-sms.js`:
+
+```javascript
+if (process.env.TOLL_FREE_NUMBER) {
+  params.MessageAttributes["AWS.MM.SMS.OriginationNumber"] = {
+    DataType: "String",
+    StringValue: process.env.TOLL_FREE_NUMBER,
+  };
+}
+```
+
+Add to Netlify environment variables:
+```
+TOLL_FREE_NUMBER=+18001234567
+```
+
+## 🐛 Troubleshooting
+
+### "Rate limit exceeded"
+- Wait 1 hour or adjust limits in `send-sms.js`
+
+### "Invalid phone number"
+- Verify phone is in international format: `+1XXXXXXXXXX`
+- Ensure phone is verified in SNS Sandbox
+
+### "Service unavailable"
+- Check AWS credentials in environment variables
+- Verify IAM permissions include `sns:Publish`
+- Check AWS region matches your SNS setup
+
+### SMS not arriving
+- Confirm number is verified in SNS Sandbox
+- Check AWS CloudWatch logs for errors
+- Verify message length < 160 characters (or it splits into multiple)
+
+## 📞 Support
+
+For issues or questions, check:
+- AWS SNS Documentation: https://docs.aws.amazon.com/sns/
+- Netlify Functions Docs: https://docs.netlify.com/functions/overview/
+
+## 📝 License
+
+MIT
