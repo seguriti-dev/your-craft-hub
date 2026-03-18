@@ -91,7 +91,7 @@ const Contact = () => {
       `${urgentTag}Name: ${values.name}\nPhone: ${values.phone}\nZip Code: ${values.zipCode}\nMessage: ${values.message}`
     );
     
-    // Open WhatsApp with the message
+    // Open WhatsApp with the message - deprecated
     window.open(`https://wa.me/15551234567?text=${encodedMessage}`, "_blank");
     
     toast({
