@@ -26,7 +26,7 @@ AWS_ACCESS_KEY_ID=your_access_key_here
 AWS_SECRET_ACCESS_KEY=your_secret_key_here
 AWS_REGION=us-east-1
 BUSINESS_PHONE_NUMBER=+17202557466
-ALLOWED_ORIGIN=http://localhost:5173
+ALLOWED_ORIGIN=http://localhost:8080
 ```
 
 #### For Netlify Production:

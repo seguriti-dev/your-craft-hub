@@ -1,6 +1,6 @@
 const API_URL = import.meta.env.PROD
   ? '/.netlify/functions/send-sms'
-  : 'http://localhost:8888/.netlify/functions/send-sms';
+  : 'http://localhost:9999/.netlify/functions/send-sms';
 
 export interface ContactFormData {
   name: string;
