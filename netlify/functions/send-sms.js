@@ -1,8 +1,6 @@
-// netlify/functions/send-sms.js
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 import { RateLimiterMemory } from "rate-limiter-flexible";
 
-// Configuración del cliente SNS
 const snsClient = new SNSClient({
   region: process.env.AWS_REGION || "us-east-1",
   credentials: {
@@ -11,22 +9,55 @@ const snsClient = new SNSClient({
   },
 });
 
-// RATE LIMITING: Por IP (anti-spam individual)
 const rateLimiterByIP = new RateLimiterMemory({
-  points: 3, // 3 requests permitidos
-  duration: 3600, // Por hora (en segundos)
-  blockDuration: 3600, // Bloquear 1 hora si excede
+  points: 3,
+  duration: 3600,
+  blockDuration: 3600,
 });
 
-// RATE LIMITING: Global (control de costos)
 const rateLimiterGlobal = new RateLimiterMemory({
-  points: 50, // 50 SMS por hora máximo
+  points: 50,
   duration: 3600,
 });
 
-// Validación de entrada
+const verifyTurnstileToken = async ({ token, ip }) => {
+  const secret = process.env.TURNSTILE_SECRET_KEY;
+
+  if (!secret) {
+    console.error("TURNSTILE_SECRET_KEY is not configured");
+    return { valid: false, error: "Captcha configuration error." };
+  }
+
+  if (!token) {
+    return { valid: false, error: "Captcha token is required." };
+  }
+
+  const response = await fetch("https://challenges.cloudflare.com/turnstile/v0/siteverify", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/x-www-form-urlencoded",
+    },
+    body: new URLSearchParams({
+      secret,
+      response: token,
+      remoteip: ip,
+    }),
+  });
+
+  const result = await response.json();
+
+  if (!response.ok || !result.success) {
+    console.warn("Turnstile verification failed", {
+      errors: result["error-codes"],
+    });
+    return { valid: false, error: "Captcha verification failed." };
+  }
+
+  return { valid: true };
+};
+
 const validateInput = (data) => {
-  const { name, phone, zipCode, message, urgent } = data;
+  const { name, phone, zipCode, message, urgent, turnstileToken } = data;
 
   if (!name || name.trim().length < 1 || name.length > 100) {
     return { valid: false, error: "Invalid name" };
@@ -48,27 +79,26 @@ const validateInput = (data) => {
     return { valid: false, error: "Invalid urgent flag" };
   }
 
+  if (!turnstileToken || typeof turnstileToken !== "string") {
+    return { valid: false, error: "Captcha verification is required" };
+  }
+
   return { valid: true };
 };
 
-// Sanitización (prevenir inyección)
-const sanitize = (str) => {
-  return str
-    .replace(/[<>]/g, "") // Eliminar HTML tags
+const sanitize = (str) =>
+  str
+    .replace(/[<>]/g, "")
     .trim()
-    .substring(0, 500); // Limitar longitud
-};
+    .substring(0, 500);
 
-// Handler principal
 export const handler = async (event) => {
-  // CORS headers
   const headers = {
     "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "*",
     "Access-Control-Allow-Headers": "Content-Type",
     "Access-Control-Allow-Methods": "POST, OPTIONS",
   };
 
-  // Manejar preflight request
   if (event.httpMethod === "OPTIONS") {
     return {
       statusCode: 200,
@@ -77,7 +107,6 @@ export const handler = async (event) => {
     };
   }
 
-  // Solo permitir POST
   if (event.httpMethod !== "POST") {
     return {
       statusCode: 405,
@@ -87,16 +116,14 @@ export const handler = async (event) => {
   }
 
   try {
-    // Obtener IP del cliente
     const clientIP =
-      event.headers["x-forwarded-for"]?.split(",")[0] ||
+      event.headers["x-forwarded-for"]?.split(",")[0]?.trim() ||
       event.headers["client-ip"] ||
       "unknown";
 
-    // RATE LIMITING - Por IP
     try {
       await rateLimiterByIP.consume(clientIP);
-    } catch (rateLimitError) {
+    } catch {
       console.warn(`Rate limit exceeded for IP: ${clientIP}`);
       return {
         statusCode: 429,
@@ -108,10 +135,9 @@ export const handler = async (event) => {
       };
     }
 
-    // RATE LIMITING - Global
     try {
       await rateLimiterGlobal.consume("global");
-    } catch (globalLimitError) {
+    } catch {
       console.error("Global rate limit exceeded");
       return {
         statusCode: 503,
@@ -122,11 +148,9 @@ export const handler = async (event) => {
       };
     }
 
-    // Parsear body
     const data = JSON.parse(event.body);
-
-    // Validar entrada
     const validation = validateInput(data);
+
     if (!validation.valid) {
       return {
         statusCode: 400,
@@ -135,15 +159,26 @@ export const handler = async (event) => {
       };
     }
 
-    // Sanitizar datos
+    const captchaVerification = await verifyTurnstileToken({
+      token: data.turnstileToken,
+      ip: clientIP,
+    });
+
+    if (!captchaVerification.valid) {
+      return {
+        statusCode: 400,
+        headers,
+        body: JSON.stringify({ error: captchaVerification.error }),
+      };
+    }
+
     const name = sanitize(data.name);
     const phone = sanitize(data.phone);
     const zipCode = sanitize(data.zipCode);
     const message = sanitize(data.message);
     const urgent = data.urgent;
 
-    // Construir mensaje SMS con formato limpio
-    const urgentIndicator = urgent ? "🚨 URGENT REQUEST 🚨\n\n" : "";
+    const urgentIndicator = urgent ? "URGENT REQUEST\n\n" : "";
     const smsMessage = `${urgentIndicator}NEW CONTACT FROM WEBSITE
 
 Name: ${name}
@@ -156,38 +191,27 @@ ${message}
 ---
 Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })} MT`;
 
-    // Configurar parámetros de SNS
     const params = {
       Message: smsMessage,
       PhoneNumber: process.env.BUSINESS_PHONE_NUMBER,
       MessageAttributes: {
         "AWS.SNS.SMS.SMSType": {
           DataType: "String",
-          StringValue: "Transactional", // Importante: mayor prioridad de entrega
+          StringValue: "Transactional",
         },
       },
     };
 
-    // Si usas Toll-Free (cuando salgas de Sandbox), descomenta esto:
-    // if (process.env.TOLL_FREE_NUMBER) {
-    //   params.MessageAttributes["AWS.MM.SMS.OriginationNumber"] = {
-    //     DataType: "String",
-    //     StringValue: process.env.TOLL_FREE_NUMBER,
-    //   };
-    // }
-
-    // Enviar SMS
     const command = new PublishCommand(params);
     const response = await snsClient.send(command);
 
     console.log("SMS sent successfully:", {
       messageId: response.MessageId,
       recipient: process.env.BUSINESS_PHONE_NUMBER,
-      urgent: urgent,
+      urgent,
       timestamp: new Date().toISOString(),
     });
 
-    // Respuesta exitosa
     return {
       statusCode: 200,
       headers,
@@ -200,7 +224,6 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
   } catch (error) {
     console.error("Error sending SMS:", error);
 
-    // Determinar tipo de error
     let statusCode = 500;
     let errorMessage = "Error sending message. Please try again.";
 
@@ -215,7 +238,6 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
       errorMessage = "SMS service temporarily unavailable.";
     }
 
-    // No exponer detalles internos al cliente
     return {
       statusCode,
       headers,

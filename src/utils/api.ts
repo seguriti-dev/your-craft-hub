@@ -8,6 +8,7 @@ export interface ContactFormData {
   zipCode: string;
   message: string;
   urgent: boolean;
+  turnstileToken: string;
 }
 
 export interface APIResponse {

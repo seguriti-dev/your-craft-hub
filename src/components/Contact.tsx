@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/form";
 import { useToast } from "@/hooks/use-toast";
 import { sendContactSMS } from "@/utils/api";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 
 const contactInfo = [
   {
@@ -76,7 +76,13 @@ const formSchema = z.object({
 const Contact = () => {
   const { toast } = useToast();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  
+  const [turnstileToken, setTurnstileToken] = useState("");
+  const [turnstileReady, setTurnstileReady] = useState(false);
+  const [turnstileError, setTurnstileError] = useState("");
+  const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
+  const turnstileWidgetIdRef = useRef<string | null>(null);
+  const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
@@ -88,46 +94,160 @@ const Contact = () => {
     },
   });
 
+  useEffect(() => {
+    if (!turnstileSiteKey || !turnstileContainerRef.current) {
+      return;
+    }
+
+    let cancelled = false;
+    let scriptToClean: HTMLScriptElement | null = null;
+
+    const renderTurnstile = () => {
+      if (
+        cancelled ||
+        !window.turnstile ||
+        !turnstileContainerRef.current ||
+        turnstileWidgetIdRef.current
+      ) {
+        return;
+      }
+
+      turnstileWidgetIdRef.current = window.turnstile.render(turnstileContainerRef.current, {
+        sitekey: turnstileSiteKey,
+        theme: "auto",
+        callback: (token: string) => {
+          setTurnstileToken(token);
+          setTurnstileReady(true);
+          setTurnstileError("");
+        },
+        "expired-callback": () => {
+          setTurnstileToken("");
+          setTurnstileReady(false);
+          setTurnstileError("Captcha expired. Please verify again.");
+        },
+        "error-callback": () => {
+          setTurnstileToken("");
+          setTurnstileReady(false);
+          setTurnstileError("Captcha could not be verified. Please try again.");
+        },
+      });
+    };
+
+    const existingScript = document.getElementById("cf-turnstile-script") as HTMLScriptElement | null;
+
+    if (window.turnstile) {
+      renderTurnstile();
+    } else if (existingScript) {
+      existingScript.addEventListener("load", renderTurnstile);
+    } else {
+      const script = document.createElement("script");
+      script.id = "cf-turnstile-script";
+      script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+      script.async = true;
+      script.defer = true;
+      script.addEventListener("load", renderTurnstile);
+      document.head.appendChild(script);
+      scriptToClean = script;
+    }
+
+    return () => {
+      cancelled = true;
+
+      if (window.turnstile && turnstileWidgetIdRef.current) {
+        window.turnstile.remove?.(turnstileWidgetIdRef.current);
+      }
+
+      if (existingScript) {
+        existingScript.removeEventListener("load", renderTurnstile);
+      }
+
+      if (scriptToClean) {
+        scriptToClean.removeEventListener("load", renderTurnstile);
+      }
+
+      turnstileWidgetIdRef.current = null;
+    };
+  }, [turnstileSiteKey]);
+
+  const resetTurnstile = () => {
+    setTurnstileToken("");
+    setTurnstileReady(false);
+
+    if (window.turnstile && turnstileWidgetIdRef.current) {
+      window.turnstile.reset(turnstileWidgetIdRef.current);
+    }
+  };
+
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
+    if (!turnstileSiteKey) {
+      toast({
+        title: "Captcha configuration missing",
+        description: "Set VITE_TURNSTILE_SITE_KEY to enable the contact form.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (!turnstileToken) {
+      setTurnstileError("Please complete the captcha before sending your message.");
+      return;
+    }
+
     setIsSubmitting(true);
 
     try {
-      // Send SMS via API
-      const result = await sendContactSMS(values);
+      const result = await sendContactSMS({
+        ...values,
+        turnstileToken,
+      });
 
       if (result.success) {
         toast({
-          title: "✅ Message sent successfully",
+          title: "Message sent successfully",
           description: "We will contact you soon. Thank you!",
           variant: "default",
         });
-        
-        // Reset form on success
+
         form.reset();
+        setTurnstileError("");
+        resetTurnstile();
       } else {
-        // Handle API errors
         let errorDescription = result.error || "Please try again later.";
-        
-        // Personalized error messages
-        if (result.error?.includes("Too many requests") || result.error?.includes("Demasiadas solicitudes")) {
+
+        if (
+          result.error?.includes("Too many requests") ||
+          result.error?.includes("Demasiadas solicitudes")
+        ) {
           errorDescription = "You have reached the request limit. Please try again in 1 hour.";
-        } else if (result.error?.includes("temporarily unavailable") || result.error?.includes("temporalmente no disponible")) {
+        } else if (
+          result.error?.includes("temporarily unavailable") ||
+          result.error?.includes("temporalmente no disponible")
+        ) {
           errorDescription = "Service temporarily unavailable. Please try again in a few minutes.";
+        } else if (
+          result.error?.toLowerCase().includes("captcha") ||
+          result.error?.toLowerCase().includes("turnstile")
+        ) {
+          errorDescription = "Captcha verification failed. Please try again.";
         }
-        
+
         toast({
-          title: "❌ Error sending message",
+          title: "Error sending message",
           description: errorDescription,
           variant: "destructive",
         });
+
+        resetTurnstile();
       }
     } catch (error) {
       console.error("Unexpected error:", error);
       toast({
-        title: "❌ Unexpected error",
+        title: "Unexpected error",
         description: "Something went wrong. Please try again.",
         variant: "destructive",
       });
+
+      resetTurnstile();
     } finally {
       setIsSubmitting(false);
     }
@@ -182,9 +302,9 @@ const Contact = () => {
                       <FormItem>
                         <FormLabel>Name</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="Your full name" 
-                            {...field} 
+                          <Input
+                            placeholder="Your full name"
+                            {...field}
                             disabled={isSubmitting}
                           />
                         </FormControl>
@@ -199,9 +319,9 @@ const Contact = () => {
                       <FormItem>
                         <FormLabel>Phone</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="+1 555 123 4567" 
-                            {...field} 
+                          <Input
+                            placeholder="+1 555 123 4567"
+                            {...field}
                             disabled={isSubmitting}
                           />
                         </FormControl>
@@ -216,9 +336,9 @@ const Contact = () => {
                       <FormItem>
                         <FormLabel>Zip Code</FormLabel>
                         <FormControl>
-                          <Input 
-                            placeholder="80202" 
-                            {...field} 
+                          <Input
+                            placeholder="80202"
+                            {...field}
                             disabled={isSubmitting}
                           />
                         </FormControl>
@@ -262,11 +382,22 @@ const Contact = () => {
                       </FormItem>
                     )}
                   />
-                  <Button 
-                    type="submit" 
-                    className="w-full" 
+                  <div className="space-y-2">
+                    <div ref={turnstileContainerRef} className="flex justify-center" />
+                    {!turnstileSiteKey ? (
+                      <p className="text-sm text-destructive text-center">
+                        Captcha is not configured. Add `VITE_TURNSTILE_SITE_KEY` to enable submissions.
+                      </p>
+                    ) : null}
+                    {turnstileError ? (
+                      <p className="text-sm text-destructive text-center">{turnstileError}</p>
+                    ) : null}
+                  </div>
+                  <Button
+                    type="submit"
+                    className="w-full"
                     size="lg"
-                    disabled={isSubmitting}
+                    disabled={isSubmitting || !turnstileSiteKey || !turnstileReady}
                   >
                     {isSubmitting ? (
                       <>
@@ -276,6 +407,9 @@ const Contact = () => {
                       "Send Message"
                     )}
                   </Button>
+                  <p className="text-sm text-muted-foreground text-center">
+                    By submitting this form, you agree to be contacted regarding your request.
+                  </p>
                 </form>
               </Form>
             </CardContent>
