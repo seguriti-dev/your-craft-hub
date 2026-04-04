@@ -27,6 +27,8 @@ AWS_SECRET_ACCESS_KEY=your_secret_key_here
 AWS_REGION=us-east-1
 BUSINESS_PHONE_NUMBER=+17202557466
 ALLOWED_ORIGIN=http://localhost:8080
+VITE_TURNSTILE_SITE_KEY=your_turnstile_site_key_here
+TURNSTILE_SECRET_KEY=your_turnstile_secret_key_here
 ```
 
 #### For Netlify Production:
@@ -38,6 +40,8 @@ Go to **Site settings** → **Environment variables** and add:
 - `AWS_REGION`
 - `BUSINESS_PHONE_NUMBER`
 - `ALLOWED_ORIGIN` (your production domain)
+- `VITE_TURNSTILE_SITE_KEY`
+- `TURNSTILE_SECRET_KEY`
 - `TOLL_FREE_NUMBER` (optional, when available)
 
 ### 3. Verify Phone Number in AWS SNS Sandbox
@@ -64,6 +68,48 @@ Netlify Functions will run at `http://localhost:8888`
 1. Fill out the contact form
 2. Submit
 3. Check if SMS arrives at the business phone number
+
+## Turnstile Test Mode
+
+For local testing, you can use Cloudflare's official test keys instead of real widget credentials.
+
+Add this to `.env`:
+
+```env
+VITE_TURNSTILE_USE_TEST_KEYS=true
+TURNSTILE_USE_TEST_KEYS=true
+VITE_TURNSTILE_TEST_BEHAVIOR=pass
+TURNSTILE_TEST_BEHAVIOR=pass
+```
+
+Available frontend test behaviors:
+- `pass`: always solves successfully
+- `fail`: always fails verification
+- `interactive`: shows an interactive testing widget
+
+Available backend test behaviors:
+- `pass`
+- `fail`
+
+Use this for local or preview testing only. Turn both flags back to `false` before switching to real credentials.
+
+## Turnstile Production Setup
+
+1. Log in to Cloudflare Dashboard.
+2. Open **Turnstile**.
+3. Create a new widget.
+4. Choose the widget mode you want for your site.
+5. Add your allowed domains:
+   - local development: `localhost`
+   - production: your real domain
+6. Save the widget and copy:
+   - site key
+   - secret key
+7. Put the site key in `VITE_TURNSTILE_SITE_KEY`.
+8. Put the secret key in `TURNSTILE_SECRET_KEY`.
+9. Set `VITE_TURNSTILE_USE_TEST_KEYS=false`.
+10. Set `TURNSTILE_USE_TEST_KEYS=false`.
+11. In Netlify, add the same production variables in **Site settings** -> **Environment variables**.
 
 ## 📂 Project Structure
 

@@ -19,6 +19,12 @@ import { useToast } from "@/hooks/use-toast";
 import { sendContactSMS } from "@/utils/api";
 import { useEffect, useRef, useState } from "react";
 
+const TURNSTILE_TEST_SITE_KEYS = {
+  pass: "1x00000000000000000000AA",
+  fail: "2x00000000000000000000AB",
+  interactive: "3x00000000000000000000FF",
+} as const;
+
 const contactInfo = [
   {
     icon: Phone,
@@ -81,7 +87,13 @@ const Contact = () => {
   const [turnstileError, setTurnstileError] = useState("");
   const turnstileContainerRef = useRef<HTMLDivElement | null>(null);
   const turnstileWidgetIdRef = useRef<string | null>(null);
-  const turnstileSiteKey = import.meta.env.VITE_TURNSTILE_SITE_KEY;
+  const useTurnstileTestKeys = import.meta.env.VITE_TURNSTILE_USE_TEST_KEYS === "true";
+  const turnstileTestBehavior = import.meta.env.VITE_TURNSTILE_TEST_BEHAVIOR || "pass";
+  const turnstileSiteKey = useTurnstileTestKeys
+    ? TURNSTILE_TEST_SITE_KEYS[
+        turnstileTestBehavior as keyof typeof TURNSTILE_TEST_SITE_KEYS
+      ] || TURNSTILE_TEST_SITE_KEYS.pass
+    : import.meta.env.VITE_TURNSTILE_SITE_KEY;
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -391,6 +403,11 @@ const Contact = () => {
                     ) : null}
                     {turnstileError ? (
                       <p className="text-sm text-destructive text-center">{turnstileError}</p>
+                    ) : null}
+                    {useTurnstileTestKeys ? (
+                      <p className="text-xs text-muted-foreground text-center">
+                        Turnstile test mode is active.
+                      </p>
                     ) : null}
                   </div>
                   <Button

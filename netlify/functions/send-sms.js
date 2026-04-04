@@ -1,6 +1,11 @@
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 import { RateLimiterMemory } from "rate-limiter-flexible";
 
+const TURNSTILE_TEST_SECRET_KEYS = {
+  pass: "1x0000000000000000000000000000000AA",
+  fail: "2x0000000000000000000000000000000AA",
+};
+
 const snsClient = new SNSClient({
   region: process.env.AWS_REGION || "us-east-1",
   credentials: {
@@ -21,7 +26,13 @@ const rateLimiterGlobal = new RateLimiterMemory({
 });
 
 const verifyTurnstileToken = async ({ token, ip }) => {
-  const secret = process.env.TURNSTILE_SECRET_KEY;
+  const useTestKeys = process.env.TURNSTILE_USE_TEST_KEYS === "true";
+  const testBehavior = process.env.TURNSTILE_TEST_BEHAVIOR || "pass";
+  const fallbackTestSecret =
+    TURNSTILE_TEST_SECRET_KEYS[testBehavior] || TURNSTILE_TEST_SECRET_KEYS.pass;
+  const secret = useTestKeys
+    ? fallbackTestSecret
+    : process.env.TURNSTILE_SECRET_KEY;
 
   if (!secret) {
     console.error("TURNSTILE_SECRET_KEY is not configured");
