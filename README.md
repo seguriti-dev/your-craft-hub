@@ -157,7 +157,7 @@ Use this for local or preview testing only. Turn both flags back to `false` befo
 ```
 🚨 URGENT REQUEST 🚨 (if urgent checkbox is checked)
 
-NEW CONTACT FROM WEBSITE
+NEW CONTACT FROM Hands-Hands WEBSITE
 
 Name: John Doe
 Phone: +1 555 123 4567

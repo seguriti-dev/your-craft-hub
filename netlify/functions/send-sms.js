@@ -190,7 +190,7 @@ export const handler = async (event) => {
     const urgent = data.urgent;
 
     const urgentIndicator = urgent ? "URGENT REQUEST\n\n" : "";
-    const smsMessage = `${urgentIndicator}NEW CONTACT FROM WEBSITE
+    const smsMessage = `${urgentIndicator}New contact from Hands-Hands website
 
 Name: ${name}
 Phone: ${phone}
