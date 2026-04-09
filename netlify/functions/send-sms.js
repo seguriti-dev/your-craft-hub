@@ -1,4 +1,6 @@
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
+import { appendFile, mkdir } from "node:fs/promises";
+import path from "node:path";
 import { RateLimiterMemory } from "rate-limiter-flexible";
 
 const TURNSTILE_TEST_SECRET_KEYS = {
@@ -16,6 +18,8 @@ const rateLimitIpDurationSeconds = getEnvInt("RATE_LIMIT_IP_DURATION_SECONDS", 3
 const rateLimitIpBlockSeconds = getEnvInt("RATE_LIMIT_IP_BLOCK_SECONDS", 3600);
 const rateLimitGlobalPoints = getEnvInt("RATE_LIMIT_GLOBAL_POINTS", 50);
 const rateLimitGlobalDurationSeconds = getEnvInt("RATE_LIMIT_GLOBAL_DURATION_SECONDS", 3600);
+const smsDevLogOnly = process.env.SMS_DEV_LOG_ONLY === "true";
+const smsDevLogPath = process.env.SMS_DEV_LOG_PATH || "logs/contact-messages.log";
 
 const snsClient = new SNSClient({
   region: process.env.AWS_REGION || "us-east-1",
@@ -113,6 +117,32 @@ const sanitize = (str) =>
     .replace(/[<>]/g, "")
     .trim()
     .substring(0, 500);
+
+const writeDevLogMessage = async ({ clientIP, message, name, phone, zipCode, urgent }) => {
+  const resolvedPath = path.resolve(process.cwd(), smsDevLogPath);
+  const logDir = path.dirname(resolvedPath);
+  const timestamp = new Date().toISOString();
+  const entry = [
+    "=== CONTACT MESSAGE ===",
+    `timestamp: ${timestamp}`,
+    `client_ip: ${clientIP}`,
+    `name: ${name}`,
+    `phone: ${phone}`,
+    `zip_code: ${zipCode}`,
+    `urgent: ${urgent}`,
+    "message:",
+    message,
+    "",
+  ].join("\n");
+
+  await mkdir(logDir, { recursive: true });
+  await appendFile(resolvedPath, `${entry}\n`, "utf8");
+
+  return {
+    messageId: `dev-log-${Date.now()}`,
+    logPath: resolvedPath,
+  };
+};
 
 export const handler = async (event) => {
   const headers = {
@@ -223,6 +253,33 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
         },
       },
     };
+
+    if (smsDevLogOnly && process.env.NODE_ENV !== "production") {
+      const devLogResult = await writeDevLogMessage({
+        clientIP,
+        message: smsMessage,
+        name,
+        phone,
+        zipCode,
+        urgent,
+      });
+
+      console.log("SMS dev log saved:", {
+        messageId: devLogResult.messageId,
+        logPath: devLogResult.logPath,
+        timestamp: new Date().toISOString(),
+      });
+
+      return {
+        statusCode: 200,
+        headers,
+        body: JSON.stringify({
+          success: true,
+          message: "Message saved to development log",
+          messageId: devLogResult.messageId,
+        }),
+      };
+    }
 
     const command = new PublishCommand(params);
     const response = await snsClient.send(command);

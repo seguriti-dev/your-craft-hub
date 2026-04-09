@@ -32,6 +32,8 @@ RATE_LIMIT_IP_DURATION_SECONDS=3600
 RATE_LIMIT_IP_BLOCK_SECONDS=3600
 RATE_LIMIT_GLOBAL_POINTS=50
 RATE_LIMIT_GLOBAL_DURATION_SECONDS=3600
+SMS_DEV_LOG_ONLY=false
+SMS_DEV_LOG_PATH=logs/contact-messages.log
 VITE_TURNSTILE_SITE_KEY=your_turnstile_site_key_here
 TURNSTILE_SECRET_KEY=your_turnstile_secret_key_here
 ```
@@ -50,6 +52,8 @@ Go to **Site settings** → **Environment variables** and add:
 - `RATE_LIMIT_IP_BLOCK_SECONDS`
 - `RATE_LIMIT_GLOBAL_POINTS`
 - `RATE_LIMIT_GLOBAL_DURATION_SECONDS`
+- `SMS_DEV_LOG_ONLY`
+- `SMS_DEV_LOG_PATH`
 - `VITE_TURNSTILE_SITE_KEY`
 - `TURNSTILE_SECRET_KEY`
 - `TOLL_FREE_NUMBER` (optional, when available)
@@ -102,6 +106,25 @@ Available backend test behaviors:
 - `fail`
 
 Use this for local or preview testing only. Turn both flags back to `false` before switching to real credentials.
+
+## Development Log Mode
+
+For local development, you can bypass AWS SNS and write each message to a log file instead.
+
+Add this to `.env`:
+
+```env
+SMS_DEV_LOG_ONLY=true
+SMS_DEV_LOG_PATH=logs/contact-messages.log
+```
+
+Behavior:
+- keeps validation, rate limiting, and Turnstile verification active
+- skips the AWS SNS request
+- appends the formatted message to the configured log file
+- only works when `NODE_ENV` is not `production`
+
+This is useful for local testing without generating SMS traffic or requiring active AWS credentials.
 
 ## Turnstile Production Setup
 
