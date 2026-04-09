@@ -6,6 +6,17 @@ const TURNSTILE_TEST_SECRET_KEYS = {
   fail: "2x0000000000000000000000000000000AA",
 };
 
+const getEnvInt = (name, fallback) => {
+  const value = Number.parseInt(process.env[name] || "", 10);
+  return Number.isFinite(value) && value > 0 ? value : fallback;
+};
+
+const rateLimitIpPoints = getEnvInt("RATE_LIMIT_IP_POINTS", 3);
+const rateLimitIpDurationSeconds = getEnvInt("RATE_LIMIT_IP_DURATION_SECONDS", 3600);
+const rateLimitIpBlockSeconds = getEnvInt("RATE_LIMIT_IP_BLOCK_SECONDS", 3600);
+const rateLimitGlobalPoints = getEnvInt("RATE_LIMIT_GLOBAL_POINTS", 50);
+const rateLimitGlobalDurationSeconds = getEnvInt("RATE_LIMIT_GLOBAL_DURATION_SECONDS", 3600);
+
 const snsClient = new SNSClient({
   region: process.env.AWS_REGION || "us-east-1",
   credentials: {
@@ -15,14 +26,14 @@ const snsClient = new SNSClient({
 });
 
 const rateLimiterByIP = new RateLimiterMemory({
-  points: 3,
-  duration: 3600,
-  blockDuration: 3600,
+  points: rateLimitIpPoints,
+  duration: rateLimitIpDurationSeconds,
+  blockDuration: rateLimitIpBlockSeconds,
 });
 
 const rateLimiterGlobal = new RateLimiterMemory({
-  points: 50,
-  duration: 3600,
+  points: rateLimitGlobalPoints,
+  duration: rateLimitGlobalDurationSeconds,
 });
 
 const verifyTurnstileToken = async ({ token, ip }) => {
@@ -140,8 +151,8 @@ export const handler = async (event) => {
         statusCode: 429,
         headers,
         body: JSON.stringify({
-          error: "Too many requests. Please try again in 1 hour.",
-          retryAfter: 3600,
+          error: "Too many requests. Please try again later.",
+          retryAfter: rateLimitIpBlockSeconds,
         }),
       };
     }

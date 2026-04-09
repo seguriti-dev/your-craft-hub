@@ -27,6 +27,11 @@ AWS_SECRET_ACCESS_KEY=your_secret_key_here
 AWS_REGION=us-east-1
 BUSINESS_PHONE_NUMBER=+17202557466
 ALLOWED_ORIGIN=http://localhost:8080
+RATE_LIMIT_IP_POINTS=3
+RATE_LIMIT_IP_DURATION_SECONDS=3600
+RATE_LIMIT_IP_BLOCK_SECONDS=3600
+RATE_LIMIT_GLOBAL_POINTS=50
+RATE_LIMIT_GLOBAL_DURATION_SECONDS=3600
 VITE_TURNSTILE_SITE_KEY=your_turnstile_site_key_here
 TURNSTILE_SECRET_KEY=your_turnstile_secret_key_here
 ```
@@ -40,6 +45,11 @@ Go to **Site settings** → **Environment variables** and add:
 - `AWS_REGION`
 - `BUSINESS_PHONE_NUMBER`
 - `ALLOWED_ORIGIN` (your production domain)
+- `RATE_LIMIT_IP_POINTS`
+- `RATE_LIMIT_IP_DURATION_SECONDS`
+- `RATE_LIMIT_IP_BLOCK_SECONDS`
+- `RATE_LIMIT_GLOBAL_POINTS`
+- `RATE_LIMIT_GLOBAL_DURATION_SECONDS`
 - `VITE_TURNSTILE_SITE_KEY`
 - `TURNSTILE_SECRET_KEY`
 - `TOLL_FREE_NUMBER` (optional, when available)
@@ -132,11 +142,13 @@ Use this for local or preview testing only. Turn both flags back to `false` befo
 ### Rate Limiting
 
 **Per IP:**
-- 3 requests per hour per IP address
-- 1 hour block if exceeded
+- Configurable with `RATE_LIMIT_IP_POINTS`
+- Window configurable with `RATE_LIMIT_IP_DURATION_SECONDS`
+- Block time configurable with `RATE_LIMIT_IP_BLOCK_SECONDS`
 
 **Global:**
-- 100 total SMS per hour
+- Configurable with `RATE_LIMIT_GLOBAL_POINTS`
+- Window configurable with `RATE_LIMIT_GLOBAL_DURATION_SECONDS`
 - Prevents cost overruns
 
 ### Input Validation
