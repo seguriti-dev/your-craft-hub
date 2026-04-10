@@ -1,4 +1,6 @@
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
+import { Ratelimit } from "@upstash/ratelimit";
+import { Redis } from "@upstash/redis";
 import { appendFile, mkdir } from "node:fs/promises";
 import path from "node:path";
 import { RateLimiterMemory } from "rate-limiter-flexible";
@@ -19,8 +21,11 @@ const rateLimitIpBlockSeconds = getEnvInt("RATE_LIMIT_IP_BLOCK_SECONDS", 3600);
 const rateLimitGlobalPoints = getEnvInt("RATE_LIMIT_GLOBAL_POINTS", 50);
 const rateLimitGlobalDurationSeconds = getEnvInt("RATE_LIMIT_GLOBAL_DURATION_SECONDS", 3600);
 const rateLimitStore = process.env.RATE_LIMIT_STORE || "memory";
+const isProduction = process.env.NODE_ENV === "production";
 const smsDevLogOnly = process.env.SMS_DEV_LOG_ONLY === "true";
 const smsDevLogPath = process.env.SMS_DEV_LOG_PATH || "logs/contact-messages.log";
+const upstashRedisRestUrl = process.env.UPSTASH_REDIS_REST_URL;
+const upstashRedisRestToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 
 const snsClient = new SNSClient({
   region: process.env.AWS_REGION || "us-east-1",
@@ -41,39 +46,120 @@ const memoryRateLimiterGlobal = new RateLimiterMemory({
   duration: rateLimitGlobalDurationSeconds,
 });
 
+const createMemoryRateLimitHandlers = () => {
+  return {
+    backend: "memory",
+    consumeIpLimit: async (clientIP) => {
+      try {
+        await memoryRateLimiterByIP.consume(clientIP);
+        return { success: true };
+      } catch {
+        return {
+          success: false,
+          statusCode: 429,
+          body: {
+            error: "Too many requests. Please try again later.",
+            retryAfter: rateLimitIpBlockSeconds,
+          },
+        };
+      }
+    },
+    consumeGlobalLimit: async () => {
+      try {
+        await memoryRateLimiterGlobal.consume("global");
+        return { success: true };
+      } catch {
+        return {
+          success: false,
+          statusCode: 503,
+          body: {
+            error: "Service temporarily unavailable. Please try again later.",
+          },
+        };
+      }
+    },
+  };
+};
+
+const getRetryAfterFromReset = (reset, fallbackSeconds) => {
+  if (typeof reset !== "number") {
+    return fallbackSeconds;
+  }
+
+  return Math.max(1, Math.ceil((reset - Date.now()) / 1000));
+};
+
+const createRedisRateLimitHandlers = () => {
+  if (!upstashRedisRestUrl || !upstashRedisRestToken) {
+    if (isProduction) {
+      throw new Error("RATE_LIMIT_STORE=redis requires UPSTASH_REDIS_REST_URL and UPSTASH_REDIS_REST_TOKEN");
+    }
+
+    console.warn("Upstash Redis credentials are missing. Falling back to memory rate limit.");
+    return createMemoryRateLimitHandlers();
+  }
+
+  const redis = new Redis({
+    url: upstashRedisRestUrl,
+    token: upstashRedisRestToken,
+  });
+
+  const ipRateLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.fixedWindow(rateLimitIpPoints, `${rateLimitIpDurationSeconds} s`),
+    prefix: "contact-form:ip",
+  });
+
+  const globalRateLimiter = new Ratelimit({
+    redis,
+    limiter: Ratelimit.fixedWindow(rateLimitGlobalPoints, `${rateLimitGlobalDurationSeconds} s`),
+    prefix: "contact-form:global",
+  });
+
+  return {
+    backend: "redis",
+    consumeIpLimit: async (clientIP) => {
+      const result = await ipRateLimiter.limit(clientIP);
+
+      if (result.success) {
+        return { success: true };
+      }
+
+      return {
+        success: false,
+        statusCode: 429,
+        body: {
+          error: "Too many requests. Please try again later.",
+          retryAfter: getRetryAfterFromReset(result.reset, rateLimitIpBlockSeconds),
+        },
+      };
+    },
+    consumeGlobalLimit: async () => {
+      const result = await globalRateLimiter.limit("global");
+
+      if (result.success) {
+        return { success: true };
+      }
+
+      return {
+        success: false,
+        statusCode: 503,
+        body: {
+          error: "Service temporarily unavailable. Please try again later.",
+          retryAfter: getRetryAfterFromReset(result.reset, rateLimitGlobalDurationSeconds),
+        },
+      };
+    },
+  };
+};
+
 const createRateLimitHandlers = () => {
   if (rateLimitStore === "memory") {
-    return {
-      consumeIpLimit: async (clientIP) => {
-        try {
-          await memoryRateLimiterByIP.consume(clientIP);
-          return { success: true };
-        } catch {
-          return {
-            success: false,
-            statusCode: 429,
-            body: {
-              error: "Too many requests. Please try again later.",
-              retryAfter: rateLimitIpBlockSeconds,
-            },
-          };
-        }
-      },
-      consumeGlobalLimit: async () => {
-        try {
-          await memoryRateLimiterGlobal.consume("global");
-          return { success: true };
-        } catch {
-          return {
-            success: false,
-            statusCode: 503,
-            body: {
-              error: "Service temporarily unavailable. Please try again later.",
-            },
-          };
-        }
-      },
-    };
+    return createMemoryRateLimitHandlers();
+  }
+
+  if (rateLimitStore === "redis") {
+    return createRedisRateLimitHandlers();
   }
 
   throw new Error(`Unsupported RATE_LIMIT_STORE: ${rateLimitStore}`);

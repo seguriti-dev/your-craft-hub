@@ -27,6 +27,8 @@ AWS_SECRET_ACCESS_KEY=your_secret_key_here
 AWS_REGION=us-east-1
 BUSINESS_PHONE_NUMBER=+17202557466
 ALLOWED_ORIGIN=http://localhost:8080
+UPSTASH_REDIS_REST_URL=url-here
+UPSTASH_REDIS_REST_TOKEN=token-here
 RATE_LIMIT_STORE=memory
 RATE_LIMIT_IP_POINTS=3
 RATE_LIMIT_IP_DURATION_SECONDS=3600
@@ -48,6 +50,8 @@ Go to **Site settings** → **Environment variables** and add:
 - `AWS_REGION`
 - `BUSINESS_PHONE_NUMBER`
 - `ALLOWED_ORIGIN` (your production domain)
+- `UPSTASH_REDIS_REST_URL`
+- `UPSTASH_REDIS_REST_TOKEN`
 - `RATE_LIMIT_STORE`
 - `RATE_LIMIT_IP_POINTS`
 - `RATE_LIMIT_IP_DURATION_SECONDS`
@@ -127,6 +131,24 @@ Behavior:
 - only works when `NODE_ENV` is not `production`
 
 This is useful for local testing without generating SMS traffic or requiring active AWS credentials.
+
+## Rate Limit Store Modes
+
+The backend supports two rate limit stores:
+
+- `RATE_LIMIT_STORE=memory`: uses in-memory counters inside the function runtime
+- `RATE_LIMIT_STORE=redis`: uses Upstash Redis for shared counters across deployments and instances
+
+Recommended combinations:
+
+- local development with file logging: `RATE_LIMIT_STORE=memory` and `SMS_DEV_LOG_ONLY=true`
+- local development simulating production counters: `RATE_LIMIT_STORE=redis` and `SMS_DEV_LOG_ONLY=true`
+- production: `RATE_LIMIT_STORE=redis` and `SMS_DEV_LOG_ONLY=false`
+
+Notes:
+
+- if `RATE_LIMIT_STORE=redis` and Upstash credentials are missing in local development, the function falls back to `memory` and logs a warning
+- if `RATE_LIMIT_STORE=redis` and Upstash credentials are missing in production, the function fails with a configuration error
 
 ## Turnstile Production Setup
 
