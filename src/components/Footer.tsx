@@ -21,7 +21,7 @@ const Footer = () => {
           </div>
           <div className="text-center md:text-right">
             <p className="text-white">
-              © {currentYear} Hands-Hands. All rights reserved.
+              © 2022 - {currentYear} Hands-Hands. All rights reserved.
             </p>
           </div>
         </div>

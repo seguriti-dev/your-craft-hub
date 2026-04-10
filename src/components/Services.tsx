@@ -112,27 +112,6 @@ const ServiceCarousel = ({ services }: { services: ServiceItem[] }) => {
     Autoplay({ delay: 5000, stopOnInteraction: true })
   );
 
-  if (services.length === 1) {
-    const service = services[0];
-    const Icon = service.icon;
-    return (
-      <div className="max-w-md mx-auto">
-        <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-border/50 overflow-hidden">
-          <div className="relative">
-            <img src={service.image} alt={service.title} className="w-full h-48 object-cover" />
-            <div className="absolute top-4 left-4 p-3 rounded-lg bg-primary/90 text-primary-foreground backdrop-blur-sm">
-              <Icon className="h-6 w-6" />
-            </div>
-          </div>
-          <CardContent className="p-6">
-            <h3 className="text-xl font-semibold mb-2">{service.title}</h3>
-            <p className="text-muted-foreground">{service.description}</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
-
   return (
     <Carousel
       opts={{ align: "start", loop: true }}
@@ -143,7 +122,7 @@ const ServiceCarousel = ({ services }: { services: ServiceItem[] }) => {
         {services.map((service, index) => {
           const Icon = service.icon;
           return (
-            <CarouselItem key={index} className="pl-4 md:basis-1/2 lg:basis-1/3">
+            <CarouselItem key={index} className="pl-4 basis-full">
               <Card className="group hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border-border/50 overflow-hidden h-full">
                 <div className="relative">
                   <img src={service.image} alt={service.title} className="w-full h-48 object-cover" />
@@ -160,8 +139,8 @@ const ServiceCarousel = ({ services }: { services: ServiceItem[] }) => {
           );
         })}
       </CarouselContent>
-      <CarouselPrevious className="hidden md:flex -left-12" />
-      <CarouselNext className="hidden md:flex -right-12" />
+      <CarouselPrevious className="-left-12 hidden md:flex" />
+      <CarouselNext className="-right-12 hidden md:flex" />
     </Carousel>
   );
 };
