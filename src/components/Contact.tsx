@@ -230,7 +230,7 @@ const Contact = () => {
           result.error?.includes("Too many requests") ||
           result.error?.includes("Demasiadas solicitudes")
         ) {
-          errorDescription = "You have reached the request limit. Please try again in 1 hour.";
+          errorDescription = "You have reached the request limit. Please try again in 24 hours.";
         } else if (
           result.error?.includes("temporarily unavailable") ||
           result.error?.includes("temporalmente no disponible")

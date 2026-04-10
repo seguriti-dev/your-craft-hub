@@ -16,10 +16,10 @@ const getEnvInt = (name, fallback) => {
 };
 
 const rateLimitIpPoints = getEnvInt("RATE_LIMIT_IP_POINTS", 3);
-const rateLimitIpDurationSeconds = getEnvInt("RATE_LIMIT_IP_DURATION_SECONDS", 3600);
-const rateLimitIpBlockSeconds = getEnvInt("RATE_LIMIT_IP_BLOCK_SECONDS", 3600);
-const rateLimitGlobalPoints = getEnvInt("RATE_LIMIT_GLOBAL_POINTS", 50);
-const rateLimitGlobalDurationSeconds = getEnvInt("RATE_LIMIT_GLOBAL_DURATION_SECONDS", 3600);
+const rateLimitIpDurationSeconds = getEnvInt("RATE_LIMIT_IP_DURATION_SECONDS", 86400);
+const rateLimitIpBlockSeconds = getEnvInt("RATE_LIMIT_IP_BLOCK_SECONDS", 86400);
+const rateLimitGlobalPoints = getEnvInt("RATE_LIMIT_GLOBAL_POINTS", 25);
+const rateLimitGlobalDurationSeconds = getEnvInt("RATE_LIMIT_GLOBAL_DURATION_SECONDS", 86400);
 const rateLimitStore = process.env.RATE_LIMIT_STORE || "memory";
 const isProduction = process.env.NODE_ENV === "production";
 const smsDevLogOnly = process.env.SMS_DEV_LOG_ONLY === "true";
