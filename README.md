@@ -27,6 +27,7 @@ AWS_SECRET_ACCESS_KEY=your_secret_key_here
 AWS_REGION=us-east-1
 BUSINESS_PHONE_NUMBER=+17202557466
 ALLOWED_ORIGIN=http://localhost:8080
+RATE_LIMIT_STORE=memory
 RATE_LIMIT_IP_POINTS=3
 RATE_LIMIT_IP_DURATION_SECONDS=3600
 RATE_LIMIT_IP_BLOCK_SECONDS=3600
@@ -47,6 +48,7 @@ Go to **Site settings** → **Environment variables** and add:
 - `AWS_REGION`
 - `BUSINESS_PHONE_NUMBER`
 - `ALLOWED_ORIGIN` (your production domain)
+- `RATE_LIMIT_STORE`
 - `RATE_LIMIT_IP_POINTS`
 - `RATE_LIMIT_IP_DURATION_SECONDS`
 - `RATE_LIMIT_IP_BLOCK_SECONDS`
@@ -165,6 +167,7 @@ This is useful for local testing without generating SMS traffic or requiring act
 ### Rate Limiting
 
 **Per IP:**
+- Store configurable with `RATE_LIMIT_STORE`
 - Configurable with `RATE_LIMIT_IP_POINTS`
 - Window configurable with `RATE_LIMIT_IP_DURATION_SECONDS`
 - Block time configurable with `RATE_LIMIT_IP_BLOCK_SECONDS`

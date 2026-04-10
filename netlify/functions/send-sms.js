@@ -18,6 +18,7 @@ const rateLimitIpDurationSeconds = getEnvInt("RATE_LIMIT_IP_DURATION_SECONDS", 3
 const rateLimitIpBlockSeconds = getEnvInt("RATE_LIMIT_IP_BLOCK_SECONDS", 3600);
 const rateLimitGlobalPoints = getEnvInt("RATE_LIMIT_GLOBAL_POINTS", 50);
 const rateLimitGlobalDurationSeconds = getEnvInt("RATE_LIMIT_GLOBAL_DURATION_SECONDS", 3600);
+const rateLimitStore = process.env.RATE_LIMIT_STORE || "memory";
 const smsDevLogOnly = process.env.SMS_DEV_LOG_ONLY === "true";
 const smsDevLogPath = process.env.SMS_DEV_LOG_PATH || "logs/contact-messages.log";
 
@@ -29,16 +30,56 @@ const snsClient = new SNSClient({
   },
 });
 
-const rateLimiterByIP = new RateLimiterMemory({
+const memoryRateLimiterByIP = new RateLimiterMemory({
   points: rateLimitIpPoints,
   duration: rateLimitIpDurationSeconds,
   blockDuration: rateLimitIpBlockSeconds,
 });
 
-const rateLimiterGlobal = new RateLimiterMemory({
+const memoryRateLimiterGlobal = new RateLimiterMemory({
   points: rateLimitGlobalPoints,
   duration: rateLimitGlobalDurationSeconds,
 });
+
+const createRateLimitHandlers = () => {
+  if (rateLimitStore === "memory") {
+    return {
+      consumeIpLimit: async (clientIP) => {
+        try {
+          await memoryRateLimiterByIP.consume(clientIP);
+          return { success: true };
+        } catch {
+          return {
+            success: false,
+            statusCode: 429,
+            body: {
+              error: "Too many requests. Please try again later.",
+              retryAfter: rateLimitIpBlockSeconds,
+            },
+          };
+        }
+      },
+      consumeGlobalLimit: async () => {
+        try {
+          await memoryRateLimiterGlobal.consume("global");
+          return { success: true };
+        } catch {
+          return {
+            success: false,
+            statusCode: 503,
+            body: {
+              error: "Service temporarily unavailable. Please try again later.",
+            },
+          };
+        }
+      },
+    };
+  }
+
+  throw new Error(`Unsupported RATE_LIMIT_STORE: ${rateLimitStore}`);
+};
+
+const rateLimitHandlers = createRateLimitHandlers();
 
 const verifyTurnstileToken = async ({ token, ip }) => {
   const useTestKeys = process.env.TURNSTILE_USE_TEST_KEYS === "true";
@@ -173,30 +214,23 @@ export const handler = async (event) => {
       event.headers["client-ip"] ||
       "unknown";
 
-    try {
-      await rateLimiterByIP.consume(clientIP);
-    } catch {
+    const ipLimitResult = await rateLimitHandlers.consumeIpLimit(clientIP);
+    if (!ipLimitResult.success) {
       console.warn(`Rate limit exceeded for IP: ${clientIP}`);
       return {
-        statusCode: 429,
+        statusCode: ipLimitResult.statusCode,
         headers,
-        body: JSON.stringify({
-          error: "Too many requests. Please try again later.",
-          retryAfter: rateLimitIpBlockSeconds,
-        }),
+        body: JSON.stringify(ipLimitResult.body),
       };
     }
 
-    try {
-      await rateLimiterGlobal.consume("global");
-    } catch {
+    const globalLimitResult = await rateLimitHandlers.consumeGlobalLimit();
+    if (!globalLimitResult.success) {
       console.error("Global rate limit exceeded");
       return {
-        statusCode: 503,
+        statusCode: globalLimitResult.statusCode,
         headers,
-        body: JSON.stringify({
-          error: "Service temporarily unavailable. Please try again later.",
-        }),
+        body: JSON.stringify(globalLimitResult.body),
       };
     }
 
