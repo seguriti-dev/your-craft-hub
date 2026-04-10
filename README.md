@@ -22,9 +22,9 @@ npm install
 Create a `.env` file in the root directory:
 
 ```env
-AWS_ACCESS_KEY_ID=your_access_key_here
-AWS_SECRET_ACCESS_KEY=your_secret_key_here
-AWS_REGION=us-east-1
+MY_AWS_ACCESS_KEY_ID=your_access_key_here
+MY_AWS_SECRET_ACCESS_KEY=your_secret_key_here
+MY_AWS_REGION=us-east-1
 BUSINESS_PHONE_NUMBER=+17202557466
 ALLOWED_ORIGIN=http://localhost:8080
 UPSTASH_REDIS_REST_URL=url-here
@@ -45,9 +45,9 @@ TURNSTILE_SECRET_KEY=your_turnstile_secret_key_here
 
 Go to **Site settings** → **Environment variables** and add:
 
-- `AWS_ACCESS_KEY_ID`
-- `AWS_SECRET_ACCESS_KEY`
-- `AWS_REGION`
+- `MY_AWS_ACCESS_KEY_ID`
+- `MY_AWS_SECRET_ACCESS_KEY`
+- `MY_AWS_REGION`
 - `BUSINESS_PHONE_NUMBER`
 - `ALLOWED_ORIGIN` (your production domain)
 - `UPSTASH_REDIS_REST_URL`
