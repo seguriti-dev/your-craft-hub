@@ -425,7 +425,7 @@ const Contact = () => {
                     )}
                   </Button>
                   <p className="text-sm text-muted-foreground text-center">
-                    By submitting this form, you agree to be contacted regarding your request.
+                    By submitting this form, you agree to be contacted regarding your request. Message frequency varies based on your inquiry. Standard message and data rates may apply.
                   </p>
                 </form>
               </Form>
