@@ -168,6 +168,21 @@ Notes:
 10. Set `TURNSTILE_USE_TEST_KEYS=false`.
 11. In Netlify, add the same production variables in **Site settings** -> **Environment variables**.
 
+## Toll-Free Number Preparation
+
+The SMS function is ready to use a toll-free origination number when `TOLL_FREE_NUMBER` is configured.
+
+Add this variable when the number becomes available:
+
+```env
+TOLL_FREE_NUMBER=+18001234567
+```
+
+Behavior:
+- if `TOLL_FREE_NUMBER` is set, SNS sends the message using that origination number
+- if `TOLL_FREE_NUMBER` is empty, the current behavior remains unchanged
+- successful sends log which origination number was used
+
 ## 📂 Project Structure
 
 ```

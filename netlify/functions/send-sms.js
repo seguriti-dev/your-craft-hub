@@ -26,6 +26,7 @@ const smsDevLogOnly = process.env.SMS_DEV_LOG_ONLY === "true";
 const smsDevLogPath = process.env.SMS_DEV_LOG_PATH || "logs/contact-messages.log";
 const upstashRedisRestUrl = process.env.UPSTASH_REDIS_REST_URL;
 const upstashRedisRestToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+const tollFreeNumber = process.env.TOLL_FREE_NUMBER;
 
 const snsClient = new SNSClient({
   region: process.env.MY_AWS_REGION || "us-east-1",
@@ -374,6 +375,13 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
       },
     };
 
+    if (tollFreeNumber) {
+      params.MessageAttributes["AWS.MM.SMS.OriginationNumber"] = {
+        DataType: "String",
+        StringValue: tollFreeNumber,
+      };
+    }
+
     if (smsDevLogOnly && process.env.NODE_ENV !== "production") {
       const devLogResult = await writeDevLogMessage({
         clientIP,
@@ -407,6 +415,7 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
     console.log("SMS sent successfully:", {
       messageId: response.MessageId,
       recipient: process.env.BUSINESS_PHONE_NUMBER,
+      originationNumber: tollFreeNumber || "default",
       urgent,
       timestamp: new Date().toISOString(),
     });
