@@ -50,6 +50,7 @@ Go to **Site settings** → **Environment variables** and add:
 - `MY_AWS_REGION`
 - `BUSINESS_PHONE_NUMBER`
 - `ALLOWED_ORIGIN` (your production domain)
+- `SMS_CONFIGURATION_SET_NAME`
 - `UPSTASH_REDIS_REST_URL`
 - `UPSTASH_REDIS_REST_TOKEN`
 - `RATE_LIMIT_STORE`
@@ -182,6 +183,21 @@ Behavior:
 - if `TOLL_FREE_NUMBER` is set, SNS sends the message using that origination number
 - if `TOLL_FREE_NUMBER` is empty, the current behavior remains unchanged
 - successful sends log which origination number was used
+
+## Configuration Set Integration
+
+The environment is prepared to store an AWS End User Messaging configuration set name, but the current implementation still sends SMS through Amazon SNS `Publish`.
+
+Add this variable when your configuration set is ready:
+
+```env
+SMS_CONFIGURATION_SET_NAME=your-configuration-set-name
+```
+
+Behavior:
+- if `SMS_CONFIGURATION_SET_NAME` is set, the function logs a warning to indicate that SNS `Publish` does not apply configuration sets
+- if it is empty, the current behavior remains unchanged
+- to actually use the configuration set for CloudWatch delivery logging, the send path must migrate from SNS `Publish` to AWS End User Messaging SMS `SendTextMessage`
 
 ## 📂 Project Structure
 

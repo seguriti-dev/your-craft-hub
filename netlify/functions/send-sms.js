@@ -27,6 +27,7 @@ const smsDevLogPath = process.env.SMS_DEV_LOG_PATH || "logs/contact-messages.log
 const upstashRedisRestUrl = process.env.UPSTASH_REDIS_REST_URL;
 const upstashRedisRestToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 const tollFreeNumber = process.env.TOLL_FREE_NUMBER;
+const smsConfigurationSetName = process.env.SMS_CONFIGURATION_SET_NAME;
 
 const snsClient = new SNSClient({
   region: process.env.MY_AWS_REGION || "us-east-1",
@@ -409,6 +410,13 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
       };
     }
 
+    if (smsConfigurationSetName) {
+      console.warn(
+        "SMS_CONFIGURATION_SET_NAME is configured, but SNS Publish does not support configuration sets. " +
+          "Use AWS End User Messaging SMS SendTextMessage to attach a configuration set."
+      );
+    }
+
     const command = new PublishCommand(params);
     const response = await snsClient.send(command);
 
@@ -416,6 +424,7 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
       messageId: response.MessageId,
       recipient: process.env.BUSINESS_PHONE_NUMBER,
       originationNumber: tollFreeNumber || "default",
+      configurationSetName: smsConfigurationSetName ? "not-applied-via-sns-publish" : "not-configured",
       urgent,
       timestamp: new Date().toISOString(),
     });
