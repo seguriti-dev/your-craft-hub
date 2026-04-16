@@ -425,7 +425,11 @@ const Contact = () => {
                     )}
                   </Button>
                   <p className="text-sm text-muted-foreground text-center">
-                    By submitting this form, you agree to be contacted regarding your request. Message frequency varies based on your inquiry. Standard message and data rates may apply.
+                    By submitting this form, you agree to receive 
+                    SMS text messages from Hands-Hands 
+                    regarding your inquiry. Message frequency varies. 
+                    Consent is not a condition of purchase. 
+                    Message and data rates may apply. Reply STOP to opt-out.                  
                   </p>
                 </form>
               </Form>
