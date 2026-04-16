@@ -210,7 +210,7 @@ const verifyTurnstileToken = async ({ token, ip }) => {
 };
 
 const validateInput = (data) => {
-  const { name, phone, zipCode, message, urgent, turnstileToken } = data;
+  const { name, phone, zipCode, message, urgent, smsOptIn, turnstileToken } = data;
 
   if (!name || name.trim().length < 1 || name.length > 100) {
     return { valid: false, error: "Invalid name" };
@@ -232,6 +232,10 @@ const validateInput = (data) => {
     return { valid: false, error: "Invalid urgent flag" };
   }
 
+  if (smsOptIn !== true) {
+    return { valid: false, error: "Explicit SMS opt-in is required" };
+  }
+
   if (!turnstileToken || typeof turnstileToken !== "string") {
     return { valid: false, error: "Captcha verification is required" };
   }
@@ -245,7 +249,7 @@ const sanitize = (str) =>
     .trim()
     .substring(0, 500);
 
-const writeDevLogMessage = async ({ clientIP, message, name, phone, zipCode, urgent }) => {
+const writeDevLogMessage = async ({ clientIP, message, name, phone, zipCode, urgent, smsOptIn }) => {
   const resolvedPath = path.resolve(process.cwd(), smsDevLogPath);
   const logDir = path.dirname(resolvedPath);
   const timestamp = new Date().toISOString();
@@ -257,6 +261,7 @@ const writeDevLogMessage = async ({ clientIP, message, name, phone, zipCode, urg
     `phone: ${phone}`,
     `zip_code: ${zipCode}`,
     `urgent: ${urgent}`,
+    `sms_opt_in: ${smsOptIn}`,
     "message:",
     message,
     "",
@@ -349,6 +354,7 @@ export const handler = async (event) => {
     const zipCode = sanitize(data.zipCode);
     const message = sanitize(data.message);
     const urgent = data.urgent;
+    const smsOptIn = data.smsOptIn;
 
     const urgentIndicator = urgent ? "URGENT REQUEST\n\n" : "";
     const smsMessage = `${urgentIndicator}Hands-Hands Cleaning & Restoration Services - New Contact Request
@@ -356,6 +362,7 @@ export const handler = async (event) => {
 Name: ${name}
 Phone: ${phone}
 Zip Code: ${zipCode}
+SMS Opt-in: ${smsOptIn ? "Yes" : "No"}
 
 Message:
 ${message}
@@ -382,6 +389,7 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
         phone,
         zipCode,
         urgent,
+        smsOptIn,
       });
 
       console.log("SMS dev log saved:", {
@@ -408,6 +416,7 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
       messageId: response.MessageId,
       recipient: process.env.BUSINESS_PHONE_NUMBER,
       urgent,
+      smsOptIn,
       timestamp: new Date().toISOString(),
     });
 
