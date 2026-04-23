@@ -77,6 +77,11 @@ const formSchema = z.object({
     .min(10, { message: "Message must be at least 10 characters" })
     .max(500, { message: "Message must be less than 500 characters" }),
   urgent: z.boolean().default(false),
+  smsOptIn: z
+    .boolean()
+    .refine((value) => value === true, {
+      message: "You must explicitly opt in to receive SMS messages.",
+    }),
 });
 
 const Contact = () => {
@@ -103,6 +108,7 @@ const Contact = () => {
       zipCode: "",
       message: "",
       urgent: false,
+      smsOptIn: false,
     },
   });
 
@@ -394,6 +400,33 @@ const Contact = () => {
                       </FormItem>
                     )}
                   />
+                  <FormField
+                    control={form.control}
+                    name="smsOptIn"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3 rounded-lg border border-border/60 p-4">
+                        <div className="flex items-start space-x-3">
+                          <FormControl>
+                            <Checkbox
+                              checked={field.value}
+                              onCheckedChange={(checked) => field.onChange(checked === true)}
+                              disabled={isSubmitting}
+                            />
+                          </FormControl>
+                          <div className="space-y-1 leading-relaxed">
+                            <FormLabel className="cursor-pointer text-sm font-medium">
+                              I agree to receive SMS text messages from Hands-Hands regarding my inquiry.
+                            </FormLabel>
+                            <p className="text-sm text-muted-foreground">
+                              Message frequency varies. Consent is not a condition of purchase. Message and
+                              data rates may apply. Reply STOP to opt out.
+                            </p>
+                          </div>
+                        </div>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
                   <div className="space-y-2">
                     <div ref={turnstileContainerRef} className="flex justify-center" />
                     {!turnstileSiteKey ? (
@@ -424,9 +457,6 @@ const Contact = () => {
                       "Send Message"
                     )}
                   </Button>
-                  <p className="text-sm text-muted-foreground text-center">
-                    By submitting this form, you agree to be contacted regarding your request. Message frequency varies based on your inquiry. Standard message and data rates may apply.
-                  </p>
                 </form>
               </Form>
             </CardContent>
