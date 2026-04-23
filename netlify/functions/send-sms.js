@@ -30,6 +30,7 @@ const upstashRedisRestUrl = process.env.UPSTASH_REDIS_REST_URL;
 const upstashRedisRestToken = process.env.UPSTASH_REDIS_REST_TOKEN;
 const tollFreeNumber = process.env.TOLL_FREE_NUMBER;
 const smsConfigurationSetName = process.env.SMS_CONFIGURATION_SET_NAME;
+const businessPhoneNumber = process.env.BUSINESS_PHONE_NUMBER;
 
 const awsClientConfig = {
   region: process.env.MY_AWS_REGION || "us-east-1",
@@ -174,6 +175,18 @@ const createRateLimitHandlers = () => {
 
 const rateLimitHandlers = createRateLimitHandlers();
 
+const createConfigurationError = (message) => {
+  const error = new Error(message);
+  error.name = "ConfigurationError";
+  return error;
+};
+
+const assertRecipientPhoneNumber = (recipientPhoneNumber) => {
+  if (!recipientPhoneNumber) {
+    throw createConfigurationError("BUSINESS_PHONE_NUMBER is required");
+  }
+};
+
 const verifyTurnstileToken = async ({ token, ip }) => {
   const useTestKeys = process.env.TURNSTILE_USE_TEST_KEYS === "true";
   const testBehavior = process.env.TURNSTILE_TEST_BEHAVIOR || "pass";
@@ -284,6 +297,8 @@ const writeDevLogMessage = async ({ clientIP, message, name, phone, zipCode, urg
 };
 
 const sendSmsWithSns = async ({ messageBody, recipientPhoneNumber, urgent, smsOptIn }) => {
+  assertRecipientPhoneNumber(recipientPhoneNumber);
+
   const params = {
     Message: messageBody,
     PhoneNumber: recipientPhoneNumber,
@@ -314,10 +329,10 @@ const sendSmsWithSns = async ({ messageBody, recipientPhoneNumber, urgent, smsOp
 };
 
 const sendSmsWithEndUserMessaging = async ({ messageBody, recipientPhoneNumber, urgent, smsOptIn }) => {
+  assertRecipientPhoneNumber(recipientPhoneNumber);
+
   if (!tollFreeNumber) {
-    const error = new Error("SMS_PROVIDER=end_user_messaging requires TOLL_FREE_NUMBER");
-    error.name = "ConfigurationError";
-    throw error;
+    throw createConfigurationError("SMS_PROVIDER=end_user_messaging requires TOLL_FREE_NUMBER");
   }
 
   const params = {
@@ -351,27 +366,42 @@ const sendSmsWithEndUserMessaging = async ({ messageBody, recipientPhoneNumber, 
   };
 };
 
-const sendSmsMessage = async ({ messageBody, recipientPhoneNumber, urgent, smsOptIn }) => {
-  if (smsProvider === "sns") {
-    return sendSmsWithSns({
-      messageBody,
-      recipientPhoneNumber,
-      urgent,
-      smsOptIn,
-    });
-  }
-
-  if (smsProvider === "end_user_messaging") {
-    return sendSmsWithEndUserMessaging({
-      messageBody,
-      recipientPhoneNumber,
-      urgent,
-      smsOptIn,
-    });
-  }
-
-  throw new Error(`Unsupported SMS_PROVIDER: ${smsProvider}`);
+const smsProviderHandlers = {
+  sns: sendSmsWithSns,
+  end_user_messaging: sendSmsWithEndUserMessaging,
 };
+
+const resolveSmsProviderHandler = () => {
+  const handler = smsProviderHandlers[smsProvider];
+
+  if (!handler) {
+    throw createConfigurationError(`Unsupported SMS_PROVIDER: ${smsProvider}`);
+  }
+
+  return handler;
+};
+
+const sendSmsMessage = async ({ messageBody, recipientPhoneNumber, urgent, smsOptIn }) => {
+  const providerHandler = resolveSmsProviderHandler();
+
+  return providerHandler({
+    messageBody,
+    recipientPhoneNumber,
+    urgent,
+    smsOptIn,
+  });
+};
+
+console.log("Contact form runtime initialized", {
+  smsProvider,
+  rateLimitStore: rateLimitHandlers.backend,
+  smsDevLogOnly,
+  hasBusinessPhoneNumber: Boolean(businessPhoneNumber),
+  hasTollFreeNumber: Boolean(tollFreeNumber),
+  hasSmsConfigurationSetName: Boolean(smsConfigurationSetName),
+  environment: process.env.NODE_ENV || "development",
+  timestamp: new Date().toISOString(),
+});
 
 export const handler = async (event) => {
   const headers = {
@@ -491,13 +521,15 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
           success: true,
           message: "Message saved to development log",
           messageId: devLogResult.messageId,
+          provider: smsProvider,
+          deliveryMode: "log_only",
         }),
       };
     }
 
     const sendResult = await sendSmsMessage({
       messageBody: smsMessage,
-      recipientPhoneNumber: process.env.BUSINESS_PHONE_NUMBER,
+      recipientPhoneNumber: businessPhoneNumber,
       urgent,
       smsOptIn,
     });
@@ -505,19 +537,25 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({
-        success: true,
-        message: "Message sent successfully",
-        messageId: sendResult.messageId,
-      }),
-    };
+        body: JSON.stringify({
+          success: true,
+          message: "Message sent successfully",
+          messageId: sendResult.messageId,
+          provider: sendResult.provider,
+          deliveryMode: "provider_send",
+        }),
+      };
   } catch (error) {
     console.error("Error sending SMS:", error);
 
     let statusCode = 500;
     let errorMessage = "Error sending message. Please try again.";
 
-    if (error.name === "InvalidParameterException" || error.name === "ValidationException") {
+    if (
+      error.name === "InvalidParameterException" ||
+      error.name === "InvalidParameterValueException" ||
+      error.name === "ValidationException"
+    ) {
       statusCode = 400;
       errorMessage = "Invalid phone number or configuration.";
     } else if (error.name === "ConfigurationError") {
@@ -526,9 +564,18 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
     } else if (error.name === "ThrottlingException") {
       statusCode = 429;
       errorMessage = "Too many requests. Please try again later.";
-    } else if (error.name === "ServiceUnavailable") {
+    } else if (error.name === "ServiceUnavailable" || error.name === "InternalServerException") {
       statusCode = 503;
       errorMessage = "SMS service temporarily unavailable.";
+    } else if (error.name === "AccessDeniedException") {
+      statusCode = 500;
+      errorMessage = "SMS provider credentials or permissions are invalid.";
+    } else if (error.name === "ResourceNotFoundException") {
+      statusCode = 500;
+      errorMessage = "SMS provider resource configuration was not found.";
+    } else if (error.name === "ConflictException" || error.name === "ServiceQuotaExceededException") {
+      statusCode = 503;
+      errorMessage = "SMS provider is temporarily unable to process requests.";
     }
 
     return {
@@ -536,6 +583,7 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
       headers,
       body: JSON.stringify({
         error: errorMessage,
+        provider: smsProvider,
       }),
     };
   }

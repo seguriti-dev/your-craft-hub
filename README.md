@@ -108,6 +108,8 @@ Current rollout status:
 - `end_user_messaging` is now implemented behind the flag for controlled testing
 - when using `end_user_messaging`, set `TOLL_FREE_NUMBER` so the function can send with your toll-free origination identity
 - `SMS_CONFIGURATION_SET_NAME` is optional and is passed through when defined
+- both providers now share the same request validation, response shape, and error handling path
+- rollback is immediate by switching `SMS_PROVIDER` back to `sns`
 
 ## Turnstile Test Mode
 
