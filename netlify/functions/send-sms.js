@@ -21,6 +21,7 @@ const rateLimitIpBlockSeconds = getEnvInt("RATE_LIMIT_IP_BLOCK_SECONDS", 86400);
 const rateLimitGlobalPoints = getEnvInt("RATE_LIMIT_GLOBAL_POINTS", 25);
 const rateLimitGlobalDurationSeconds = getEnvInt("RATE_LIMIT_GLOBAL_DURATION_SECONDS", 86400);
 const rateLimitStore = process.env.RATE_LIMIT_STORE || "memory";
+const smsProvider = process.env.SMS_PROVIDER || "sns";
 const isProduction = process.env.NODE_ENV === "production";
 const smsDevLogOnly = process.env.SMS_DEV_LOG_ONLY === "true";
 const smsDevLogPath = process.env.SMS_DEV_LOG_PATH || "logs/contact-messages.log";
@@ -276,6 +277,49 @@ const writeDevLogMessage = async ({ clientIP, message, name, phone, zipCode, urg
   };
 };
 
+const sendSmsWithSns = async ({ messageBody, recipientPhoneNumber, urgent, smsOptIn }) => {
+  const params = {
+    Message: messageBody,
+    PhoneNumber: recipientPhoneNumber,
+    MessageAttributes: {
+      "AWS.SNS.SMS.SMSType": {
+        DataType: "String",
+        StringValue: "Transactional",
+      },
+    },
+  };
+
+  const command = new PublishCommand(params);
+  const response = await snsClient.send(command);
+
+  console.log("SMS sent successfully:", {
+    provider: "sns",
+    messageId: response.MessageId,
+    recipient: recipientPhoneNumber,
+    urgent,
+    smsOptIn,
+    timestamp: new Date().toISOString(),
+  });
+
+  return {
+    messageId: response.MessageId,
+    provider: "sns",
+  };
+};
+
+const sendSmsMessage = async ({ messageBody, recipientPhoneNumber, urgent, smsOptIn }) => {
+  if (smsProvider === "sns") {
+    return sendSmsWithSns({
+      messageBody,
+      recipientPhoneNumber,
+      urgent,
+      smsOptIn,
+    });
+  }
+
+  throw new Error(`Unsupported SMS_PROVIDER: ${smsProvider}`);
+};
+
 export const handler = async (event) => {
   const headers = {
     "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "*",
@@ -370,17 +414,6 @@ ${message}
 ---
 Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })} MT`;
 
-    const params = {
-      Message: smsMessage,
-      PhoneNumber: process.env.BUSINESS_PHONE_NUMBER,
-      MessageAttributes: {
-        "AWS.SNS.SMS.SMSType": {
-          DataType: "String",
-          StringValue: "Transactional",
-        },
-      },
-    };
-
     if (smsDevLogOnly && process.env.NODE_ENV !== "production") {
       const devLogResult = await writeDevLogMessage({
         clientIP,
@@ -409,15 +442,11 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
       };
     }
 
-    const command = new PublishCommand(params);
-    const response = await snsClient.send(command);
-
-    console.log("SMS sent successfully:", {
-      messageId: response.MessageId,
-      recipient: process.env.BUSINESS_PHONE_NUMBER,
+    const sendResult = await sendSmsMessage({
+      messageBody: smsMessage,
+      recipientPhoneNumber: process.env.BUSINESS_PHONE_NUMBER,
       urgent,
       smsOptIn,
-      timestamp: new Date().toISOString(),
     });
 
     return {
@@ -426,7 +455,7 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
       body: JSON.stringify({
         success: true,
         message: "Message sent successfully",
-        messageId: response.MessageId,
+        messageId: sendResult.messageId,
       }),
     };
   } catch (error) {

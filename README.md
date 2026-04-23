@@ -25,6 +25,7 @@ Create a `.env` file in the root directory:
 MY_AWS_ACCESS_KEY_ID=your_access_key_here
 MY_AWS_SECRET_ACCESS_KEY=your_secret_key_here
 MY_AWS_REGION=us-east-1
+SMS_PROVIDER=sns
 BUSINESS_PHONE_NUMBER=+17202557466
 ALLOWED_ORIGIN=http://localhost:8080
 UPSTASH_REDIS_REST_URL=url-here
@@ -48,6 +49,7 @@ Go to **Site settings** → **Environment variables** and add:
 - `MY_AWS_ACCESS_KEY_ID`
 - `MY_AWS_SECRET_ACCESS_KEY`
 - `MY_AWS_REGION`
+- `SMS_PROVIDER`
 - `BUSINESS_PHONE_NUMBER`
 - `ALLOWED_ORIGIN` (your production domain)
 - `UPSTASH_REDIS_REST_URL`
@@ -88,6 +90,15 @@ Netlify Functions will run at `http://localhost:8888`
 1. Fill out the contact form
 2. Submit
 3. Check if SMS arrives at the business phone number
+
+## SMS Provider Modes
+
+The backend is prepared to support multiple SMS providers through the `SMS_PROVIDER` flag.
+
+- `SMS_PROVIDER=sns`: current default path using Amazon SNS `Publish`
+- `SMS_PROVIDER=end_user_messaging`: reserved for the future migration to AWS End User Messaging SMS
+
+At this stage, only `sns` is implemented. The flag exists to prepare a controlled migration without changing the current send behavior.
 
 ## Turnstile Test Mode
 
