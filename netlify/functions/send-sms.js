@@ -1,3 +1,4 @@
+import { PinpointSMSVoiceV2Client, SendTextMessageCommand } from "@aws-sdk/client-pinpoint-sms-voice-v2";
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
@@ -27,14 +28,19 @@ const smsDevLogOnly = process.env.SMS_DEV_LOG_ONLY === "true";
 const smsDevLogPath = process.env.SMS_DEV_LOG_PATH || "logs/contact-messages.log";
 const upstashRedisRestUrl = process.env.UPSTASH_REDIS_REST_URL;
 const upstashRedisRestToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+const tollFreeNumber = process.env.TOLL_FREE_NUMBER;
+const smsConfigurationSetName = process.env.SMS_CONFIGURATION_SET_NAME;
 
-const snsClient = new SNSClient({
+const awsClientConfig = {
   region: process.env.MY_AWS_REGION || "us-east-1",
   credentials: {
     accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.MY_AWS_SECRET_ACCESS_KEY,
   },
-});
+};
+
+const snsClient = new SNSClient(awsClientConfig);
+const pinpointSmsVoiceV2Client = new PinpointSMSVoiceV2Client(awsClientConfig);
 
 const memoryRateLimiterByIP = new RateLimiterMemory({
   points: rateLimitIpPoints,
@@ -307,9 +313,56 @@ const sendSmsWithSns = async ({ messageBody, recipientPhoneNumber, urgent, smsOp
   };
 };
 
+const sendSmsWithEndUserMessaging = async ({ messageBody, recipientPhoneNumber, urgent, smsOptIn }) => {
+  if (!tollFreeNumber) {
+    const error = new Error("SMS_PROVIDER=end_user_messaging requires TOLL_FREE_NUMBER");
+    error.name = "ConfigurationError";
+    throw error;
+  }
+
+  const params = {
+    DestinationPhoneNumber: recipientPhoneNumber,
+    OriginationIdentity: tollFreeNumber,
+    MessageBody: messageBody,
+    MessageType: "TRANSACTIONAL",
+  };
+
+  if (smsConfigurationSetName) {
+    params.ConfigurationSetName = smsConfigurationSetName;
+  }
+
+  const command = new SendTextMessageCommand(params);
+  const response = await pinpointSmsVoiceV2Client.send(command);
+
+  console.log("SMS sent successfully:", {
+    provider: "end_user_messaging",
+    messageId: response.MessageId,
+    recipient: recipientPhoneNumber,
+    originationIdentity: tollFreeNumber,
+    configurationSetName: smsConfigurationSetName || null,
+    urgent,
+    smsOptIn,
+    timestamp: new Date().toISOString(),
+  });
+
+  return {
+    messageId: response.MessageId,
+    provider: "end_user_messaging",
+  };
+};
+
 const sendSmsMessage = async ({ messageBody, recipientPhoneNumber, urgent, smsOptIn }) => {
   if (smsProvider === "sns") {
     return sendSmsWithSns({
+      messageBody,
+      recipientPhoneNumber,
+      urgent,
+      smsOptIn,
+    });
+  }
+
+  if (smsProvider === "end_user_messaging") {
+    return sendSmsWithEndUserMessaging({
       messageBody,
       recipientPhoneNumber,
       urgent,
@@ -464,9 +517,12 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
     let statusCode = 500;
     let errorMessage = "Error sending message. Please try again.";
 
-    if (error.name === "InvalidParameterException") {
+    if (error.name === "InvalidParameterException" || error.name === "ValidationException") {
       statusCode = 400;
       errorMessage = "Invalid phone number or configuration.";
+    } else if (error.name === "ConfigurationError") {
+      statusCode = 500;
+      errorMessage = "SMS provider configuration is incomplete.";
     } else if (error.name === "ThrottlingException") {
       statusCode = 429;
       errorMessage = "Too many requests. Please try again later.";
