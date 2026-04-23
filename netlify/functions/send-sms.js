@@ -1,3 +1,4 @@
+import { PinpointSMSVoiceV2Client, SendTextMessageCommand } from "@aws-sdk/client-pinpoint-sms-voice-v2";
 import { SNSClient, PublishCommand } from "@aws-sdk/client-sns";
 import { Ratelimit } from "@upstash/ratelimit";
 import { Redis } from "@upstash/redis";
@@ -21,19 +22,26 @@ const rateLimitIpBlockSeconds = getEnvInt("RATE_LIMIT_IP_BLOCK_SECONDS", 86400);
 const rateLimitGlobalPoints = getEnvInt("RATE_LIMIT_GLOBAL_POINTS", 25);
 const rateLimitGlobalDurationSeconds = getEnvInt("RATE_LIMIT_GLOBAL_DURATION_SECONDS", 86400);
 const rateLimitStore = process.env.RATE_LIMIT_STORE || "memory";
+const smsProvider = process.env.SMS_PROVIDER || "sns";
 const isProduction = process.env.NODE_ENV === "production";
 const smsDevLogOnly = process.env.SMS_DEV_LOG_ONLY === "true";
 const smsDevLogPath = process.env.SMS_DEV_LOG_PATH || "logs/contact-messages.log";
 const upstashRedisRestUrl = process.env.UPSTASH_REDIS_REST_URL;
 const upstashRedisRestToken = process.env.UPSTASH_REDIS_REST_TOKEN;
+const tollFreeNumber = process.env.TOLL_FREE_NUMBER;
+const smsConfigurationSetName = process.env.SMS_CONFIGURATION_SET_NAME;
+const businessPhoneNumber = process.env.BUSINESS_PHONE_NUMBER;
 
-const snsClient = new SNSClient({
+const awsClientConfig = {
   region: process.env.MY_AWS_REGION || "us-east-1",
   credentials: {
     accessKeyId: process.env.MY_AWS_ACCESS_KEY_ID,
     secretAccessKey: process.env.MY_AWS_SECRET_ACCESS_KEY,
   },
-});
+};
+
+const snsClient = new SNSClient(awsClientConfig);
+const pinpointSmsVoiceV2Client = new PinpointSMSVoiceV2Client(awsClientConfig);
 
 const memoryRateLimiterByIP = new RateLimiterMemory({
   points: rateLimitIpPoints,
@@ -167,6 +175,18 @@ const createRateLimitHandlers = () => {
 
 const rateLimitHandlers = createRateLimitHandlers();
 
+const createConfigurationError = (message) => {
+  const error = new Error(message);
+  error.name = "ConfigurationError";
+  return error;
+};
+
+const assertRecipientPhoneNumber = (recipientPhoneNumber) => {
+  if (!recipientPhoneNumber) {
+    throw createConfigurationError("BUSINESS_PHONE_NUMBER is required");
+  }
+};
+
 const verifyTurnstileToken = async ({ token, ip }) => {
   const useTestKeys = process.env.TURNSTILE_USE_TEST_KEYS === "true";
   const testBehavior = process.env.TURNSTILE_TEST_BEHAVIOR || "pass";
@@ -276,6 +296,113 @@ const writeDevLogMessage = async ({ clientIP, message, name, phone, zipCode, urg
   };
 };
 
+const sendSmsWithSns = async ({ messageBody, recipientPhoneNumber, urgent, smsOptIn }) => {
+  assertRecipientPhoneNumber(recipientPhoneNumber);
+
+  const params = {
+    Message: messageBody,
+    PhoneNumber: recipientPhoneNumber,
+    MessageAttributes: {
+      "AWS.SNS.SMS.SMSType": {
+        DataType: "String",
+        StringValue: "Transactional",
+      },
+    },
+  };
+
+  const command = new PublishCommand(params);
+  const response = await snsClient.send(command);
+
+  console.log("SMS sent successfully:", {
+    provider: "sns",
+    messageId: response.MessageId,
+    recipient: recipientPhoneNumber,
+    urgent,
+    smsOptIn,
+    timestamp: new Date().toISOString(),
+  });
+
+  return {
+    messageId: response.MessageId,
+    provider: "sns",
+  };
+};
+
+const sendSmsWithEndUserMessaging = async ({ messageBody, recipientPhoneNumber, urgent, smsOptIn }) => {
+  assertRecipientPhoneNumber(recipientPhoneNumber);
+
+  if (!tollFreeNumber) {
+    throw createConfigurationError("SMS_PROVIDER=end_user_messaging requires TOLL_FREE_NUMBER");
+  }
+
+  const params = {
+    DestinationPhoneNumber: recipientPhoneNumber,
+    OriginationIdentity: tollFreeNumber,
+    MessageBody: messageBody,
+    MessageType: "TRANSACTIONAL",
+  };
+
+  if (smsConfigurationSetName) {
+    params.ConfigurationSetName = smsConfigurationSetName;
+  }
+
+  const command = new SendTextMessageCommand(params);
+  const response = await pinpointSmsVoiceV2Client.send(command);
+
+  console.log("SMS sent successfully:", {
+    provider: "end_user_messaging",
+    messageId: response.MessageId,
+    recipient: recipientPhoneNumber,
+    originationIdentity: tollFreeNumber,
+    configurationSetName: smsConfigurationSetName || null,
+    urgent,
+    smsOptIn,
+    timestamp: new Date().toISOString(),
+  });
+
+  return {
+    messageId: response.MessageId,
+    provider: "end_user_messaging",
+  };
+};
+
+const smsProviderHandlers = {
+  sns: sendSmsWithSns,
+  end_user_messaging: sendSmsWithEndUserMessaging,
+};
+
+const resolveSmsProviderHandler = () => {
+  const handler = smsProviderHandlers[smsProvider];
+
+  if (!handler) {
+    throw createConfigurationError(`Unsupported SMS_PROVIDER: ${smsProvider}`);
+  }
+
+  return handler;
+};
+
+const sendSmsMessage = async ({ messageBody, recipientPhoneNumber, urgent, smsOptIn }) => {
+  const providerHandler = resolveSmsProviderHandler();
+
+  return providerHandler({
+    messageBody,
+    recipientPhoneNumber,
+    urgent,
+    smsOptIn,
+  });
+};
+
+console.log("Contact form runtime initialized", {
+  smsProvider,
+  rateLimitStore: rateLimitHandlers.backend,
+  smsDevLogOnly,
+  hasBusinessPhoneNumber: Boolean(businessPhoneNumber),
+  hasTollFreeNumber: Boolean(tollFreeNumber),
+  hasSmsConfigurationSetName: Boolean(smsConfigurationSetName),
+  environment: process.env.NODE_ENV || "development",
+  timestamp: new Date().toISOString(),
+});
+
 export const handler = async (event) => {
   const headers = {
     "Access-Control-Allow-Origin": process.env.ALLOWED_ORIGIN || "*",
@@ -370,17 +497,6 @@ ${message}
 ---
 Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })} MT`;
 
-    const params = {
-      Message: smsMessage,
-      PhoneNumber: process.env.BUSINESS_PHONE_NUMBER,
-      MessageAttributes: {
-        "AWS.SNS.SMS.SMSType": {
-          DataType: "String",
-          StringValue: "Transactional",
-        },
-      },
-    };
-
     if (smsDevLogOnly && process.env.NODE_ENV !== "production") {
       const devLogResult = await writeDevLogMessage({
         clientIP,
@@ -405,45 +521,61 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
           success: true,
           message: "Message saved to development log",
           messageId: devLogResult.messageId,
+          provider: smsProvider,
+          deliveryMode: "log_only",
         }),
       };
     }
 
-    const command = new PublishCommand(params);
-    const response = await snsClient.send(command);
-
-    console.log("SMS sent successfully:", {
-      messageId: response.MessageId,
-      recipient: process.env.BUSINESS_PHONE_NUMBER,
+    const sendResult = await sendSmsMessage({
+      messageBody: smsMessage,
+      recipientPhoneNumber: businessPhoneNumber,
       urgent,
       smsOptIn,
-      timestamp: new Date().toISOString(),
     });
 
     return {
       statusCode: 200,
       headers,
-      body: JSON.stringify({
-        success: true,
-        message: "Message sent successfully",
-        messageId: response.MessageId,
-      }),
-    };
+        body: JSON.stringify({
+          success: true,
+          message: "Message sent successfully",
+          messageId: sendResult.messageId,
+          provider: sendResult.provider,
+          deliveryMode: "provider_send",
+        }),
+      };
   } catch (error) {
     console.error("Error sending SMS:", error);
 
     let statusCode = 500;
     let errorMessage = "Error sending message. Please try again.";
 
-    if (error.name === "InvalidParameterException") {
+    if (
+      error.name === "InvalidParameterException" ||
+      error.name === "InvalidParameterValueException" ||
+      error.name === "ValidationException"
+    ) {
       statusCode = 400;
       errorMessage = "Invalid phone number or configuration.";
+    } else if (error.name === "ConfigurationError") {
+      statusCode = 500;
+      errorMessage = "SMS provider configuration is incomplete.";
     } else if (error.name === "ThrottlingException") {
       statusCode = 429;
       errorMessage = "Too many requests. Please try again later.";
-    } else if (error.name === "ServiceUnavailable") {
+    } else if (error.name === "ServiceUnavailable" || error.name === "InternalServerException") {
       statusCode = 503;
       errorMessage = "SMS service temporarily unavailable.";
+    } else if (error.name === "AccessDeniedException") {
+      statusCode = 500;
+      errorMessage = "SMS provider credentials or permissions are invalid.";
+    } else if (error.name === "ResourceNotFoundException") {
+      statusCode = 500;
+      errorMessage = "SMS provider resource configuration was not found.";
+    } else if (error.name === "ConflictException" || error.name === "ServiceQuotaExceededException") {
+      statusCode = 503;
+      errorMessage = "SMS provider is temporarily unable to process requests.";
     }
 
     return {
@@ -451,6 +583,7 @@ Submitted: ${new Date().toLocaleString("en-US", { timeZone: "America/Denver" })}
       headers,
       body: JSON.stringify({
         error: errorMessage,
+        provider: smsProvider,
       }),
     };
   }

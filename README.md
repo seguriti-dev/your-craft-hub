@@ -3,9 +3,9 @@
 ## 📋 Prerequisites
 
 - Node.js 18+ installed
-- AWS Account with SNS configured
+- AWS Account with SNS or End User Messaging SMS configured
 - Netlify account
-- IAM user with `sns:Publish` permissions
+- IAM user with `sns:Publish` and/or End User Messaging SMS permissions
 
 ## 🚀 Setup Instructions
 
@@ -25,7 +25,10 @@ Create a `.env` file in the root directory:
 MY_AWS_ACCESS_KEY_ID=your_access_key_here
 MY_AWS_SECRET_ACCESS_KEY=your_secret_key_here
 MY_AWS_REGION=us-east-1
+SMS_PROVIDER=sns
 BUSINESS_PHONE_NUMBER=+17202557466
+TOLL_FREE_NUMBER=
+SMS_CONFIGURATION_SET_NAME=
 ALLOWED_ORIGIN=http://localhost:8080
 UPSTASH_REDIS_REST_URL=url-here
 UPSTASH_REDIS_REST_TOKEN=token-here
@@ -48,7 +51,10 @@ Go to **Site settings** → **Environment variables** and add:
 - `MY_AWS_ACCESS_KEY_ID`
 - `MY_AWS_SECRET_ACCESS_KEY`
 - `MY_AWS_REGION`
+- `SMS_PROVIDER`
 - `BUSINESS_PHONE_NUMBER`
+- `TOLL_FREE_NUMBER` (required when `SMS_PROVIDER=end_user_messaging`)
+- `SMS_CONFIGURATION_SET_NAME` (optional)
 - `ALLOWED_ORIGIN` (your production domain)
 - `UPSTASH_REDIS_REST_URL`
 - `UPSTASH_REDIS_REST_TOKEN`
@@ -88,6 +94,22 @@ Netlify Functions will run at `http://localhost:8888`
 1. Fill out the contact form
 2. Submit
 3. Check if SMS arrives at the business phone number
+
+## SMS Provider Modes
+
+The backend is prepared to support multiple SMS providers through the `SMS_PROVIDER` flag.
+
+- `SMS_PROVIDER=sns`: current default path using Amazon SNS `Publish`
+- `SMS_PROVIDER=end_user_messaging`: sends through AWS End User Messaging SMS `SendTextMessage`
+
+Current rollout status:
+
+- `sns` remains the default and current production-safe path
+- `end_user_messaging` is now implemented behind the flag for controlled testing
+- when using `end_user_messaging`, set `TOLL_FREE_NUMBER` so the function can send with your toll-free origination identity
+- `SMS_CONFIGURATION_SET_NAME` is optional and is passed through when defined
+- both providers now share the same request validation, response shape, and error handling path
+- rollback is immediate by switching `SMS_PROVIDER` back to `sns`
 
 ## Turnstile Test Mode
 
@@ -131,6 +153,8 @@ Behavior:
 - only works when `NODE_ENV` is not `production`
 
 This is useful for local testing without generating SMS traffic or requiring active AWS credentials.
+
+It can also be combined with either SMS provider and either rate limit store while you validate the rest of the request flow.
 
 ## Rate Limit Store Modes
 
@@ -249,26 +273,20 @@ See AWS Support ticket instructions in the main documentation.
 
 ### Enable Toll-Free Number
 
-Uncomment in `send-sms.js`:
+Set the provider and origination identity in environment variables:
 
-```javascript
-if (process.env.TOLL_FREE_NUMBER) {
-  params.MessageAttributes["AWS.MM.SMS.OriginationNumber"] = {
-    DataType: "String",
-    StringValue: process.env.TOLL_FREE_NUMBER,
-  };
-}
-```
-
-Add to Netlify environment variables:
-```
+```env
+SMS_PROVIDER=end_user_messaging
 TOLL_FREE_NUMBER=+18001234567
+SMS_CONFIGURATION_SET_NAME=your-configuration-set-name
 ```
+
+With that configuration, the function sends through AWS End User Messaging SMS `SendTextMessage` and passes the toll-free number as `OriginationIdentity`.
 
 ## 🐛 Troubleshooting
 
 ### "Rate limit exceeded"
-- Wait 1 hour or adjust limits in `send-sms.js`
+- Wait until the current rate-limit window resets, or adjust the `RATE_LIMIT_*` variables in your environment configuration
 
 ### "Invalid phone number"
 - Verify phone is in international format: `+1XXXXXXXXXX`
@@ -276,8 +294,8 @@ TOLL_FREE_NUMBER=+18001234567
 
 ### "Service unavailable"
 - Check AWS credentials in environment variables
-- Verify IAM permissions include `sns:Publish`
-- Check AWS region matches your SNS setup
+- Verify IAM permissions match the active provider
+- Check AWS region matches your SNS or End User Messaging SMS setup
 
 ### SMS not arriving
 - Confirm number is verified in SNS Sandbox
