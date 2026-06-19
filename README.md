@@ -254,17 +254,6 @@ I need help with a kitchen remodel...
 Submitted: 3/10/2026, 2:30:00 PM MT
 ```
 
-## 💰 Cost Estimation
-
-**AWS SNS Sandbox (Free Tier):**
-- First 100 SMS: Free
-- After: ~$0.00645 per SMS (US)
-
-**Production with Toll-Free:**
-- Toll-Free number: ~$2/month
-- SMS outbound: ~$0.0075 per message
-- Example: 500 SMS/month = $2 + $3.75 = $5.75/month
-
 ## 🚨 Moving to Production
 
 ### Exit Sandbox Mode
