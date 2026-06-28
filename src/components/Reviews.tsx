@@ -75,6 +75,8 @@ const Reviews = () => {
 
   return (
     <section id="reviews" className="py-20 bg-muted/50">
+      {/* Alias anchor so /#portfolio (Google Ads sitelink) lands on this section. */}
+      <span id="portfolio" aria-hidden="true" className="block scroll-mt-20" />
       <div className="container mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">

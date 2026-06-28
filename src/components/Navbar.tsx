@@ -24,6 +24,18 @@ const Navbar = () => {
     }
   };
 
+  // Menu items are real <a href="#..."> anchors (better for SEO / Google Ads
+  // sitelinks). We prevent the native jump to keep the smooth scroll and to
+  // reflect the section in the URL hash without a hard reload.
+  const handleNavClick = (
+    event: React.MouseEvent<HTMLAnchorElement>,
+    id: string
+  ) => {
+    event.preventDefault();
+    scrollToSection(id);
+    window.history.pushState(null, "", `#${id}`);
+  };
+
   return (
     <nav
       className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -46,30 +58,34 @@ const Navbar = () => {
 
           {/* Desktop Menu */}
           <div className="hidden md:flex items-center space-x-8">
-            <button
-              onClick={() => scrollToSection("inicio")}
+            <a
+              href="#inicio"
+              onClick={(e) => handleNavClick(e, "inicio")}
               className={`${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
               Home
-            </button>
-            <button
-              onClick={() => scrollToSection("servicios")}
+            </a>
+            <a
+              href="#servicios"
+              onClick={(e) => handleNavClick(e, "servicios")}
               className={`${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
               Services
-            </button>
-            <button
-              onClick={() => scrollToSection("reviews")}
+            </a>
+            <a
+              href="#portfolio"
+              onClick={(e) => handleNavClick(e, "portfolio")}
               className={`${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
               Portfolio
-            </button>
-            <button
-              onClick={() => scrollToSection("contacto")}
+            </a>
+            <a
+              href="#contacto"
+              onClick={(e) => handleNavClick(e, "contacto")}
               className={`${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
               Contact
-            </button>
+            </a>
             <Button onClick={() => scrollToSection("contacto")}>
               Request Quote
             </Button>
@@ -87,30 +103,34 @@ const Navbar = () => {
         {/* Mobile Menu */}
         {isMobileMenuOpen && (
           <div className="md:hidden py-4 space-y-4">
-            <button
-              onClick={() => scrollToSection("inicio")}
+            <a
+              href="#inicio"
+              onClick={(e) => handleNavClick(e, "inicio")}
               className={`block w-full text-left px-4 py-2 ${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
               Home
-            </button>
-            <button
-              onClick={() => scrollToSection("servicios")}
+            </a>
+            <a
+              href="#servicios"
+              onClick={(e) => handleNavClick(e, "servicios")}
               className={`block w-full text-left px-4 py-2 ${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
               Services
-            </button>
-            <button
-              onClick={() => scrollToSection("reviews")}
+            </a>
+            <a
+              href="#portfolio"
+              onClick={(e) => handleNavClick(e, "portfolio")}
               className={`block w-full text-left px-4 py-2 ${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
               Portfolio
-            </button>
-            <button
-              onClick={() => scrollToSection("contacto")}
+            </a>
+            <a
+              href="#contacto"
+              onClick={(e) => handleNavClick(e, "contacto")}
               className={`block w-full text-left px-4 py-2 ${isScrolled ? 'text-foreground' : 'text-white'} hover:text-primary transition-colors duration-300`}
             >
               Contact
-            </button>
+            </a>
             <div className="px-4">
               <Button onClick={() => scrollToSection("contacto")} className="w-full">
                 Request Quote

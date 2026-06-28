@@ -96,6 +96,12 @@ All colors MUST be HSL.
   html {
     scroll-behavior: smooth;
   }
+
+  /* Offset for the fixed navbar (~h-20 / 80px) so section headings
+     are not hidden under it when navigating to an anchor. */
+  section[id] {
+    scroll-margin-top: 5rem;
+  }
 }
 
 @layer utilities {
